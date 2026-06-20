@@ -46,6 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\Figura.cs" />
+    <Compile Include="Models\Linea.cs" />
+    <Compile Include="Models\Rectangulo.cs" />
+    <Compile Include="Models\Circulo.cs" />
+    <Compile Include="Models\Poligono.cs" />
+    <Compile Include="Raster\Transformacion.cs" />
+    <Compile Include="Raster\DibujoRaster.cs" />
+    <Compile Include="Raster\RellenoRaster.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
