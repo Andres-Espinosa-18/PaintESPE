@@ -54,6 +54,8 @@
     <Compile Include="Raster\Transformacion.cs" />
     <Compile Include="Raster\DibujoRaster.cs" />
     <Compile Include="Raster\RellenoRaster.cs" />
+    <Compile Include="Controllers\GestorLienzo.cs" />
+    <Compile Include="Controllers\ControladorDibujo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
