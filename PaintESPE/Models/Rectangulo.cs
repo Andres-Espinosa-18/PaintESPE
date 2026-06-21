@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using PaintESPE.Raster;
 
@@ -7,7 +8,6 @@ namespace PaintESPE.Models
     {
         public Rectangulo(Point p1, Point p2)
         {
-            // Se definen los 4 vértices para que mantenga la forma al rotar
             Puntos.Add(new Point(p1.X, p1.Y));
             Puntos.Add(new Point(p2.X, p1.Y));
             Puntos.Add(new Point(p2.X, p2.Y));
@@ -20,11 +20,13 @@ namespace PaintESPE.Models
 
             if (ColorRelleno != Color.Transparent)
             {
-                // TODO: Implementar relleno (Scanline para polígonos o FloodFill tras dibujar borde)
-                // Por ahora solo se deja la estructura preparada.
+                int x0 = Math.Min(Puntos[0].X, Puntos[2].X);
+                int y0 = Math.Min(Puntos[0].Y, Puntos[2].Y);
+                int x1 = Math.Max(Puntos[0].X, Puntos[2].X);
+                int y1 = Math.Max(Puntos[0].Y, Puntos[2].Y);
+                DibujoRaster.RellenarRectangulo(lienzo, x0, y0, x1, y1, ColorRelleno);
             }
-            
-            // Dibujar los 4 lados conectando los vértices
+
             for (int i = 0; i < Puntos.Count; i++)
             {
                 Point inicio = Puntos[i];

@@ -2,17 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using PaintESPE.Models;
+using PaintESPE.Raster;
 
 namespace PaintESPE.Controllers
 {
+    public struct AccionRelleno
+    {
+        public Point PuntoInicial;
+        public Color ColorRelleno;
+    }
+
     public class GestorLienzo
     {
         private Bitmap _buffer;
         public List<Figura> Figuras { get; private set; }
+        public List<AccionRelleno> AccionesRelleno { get; private set; }
 
         public GestorLienzo(int anchoInicial, int altoInicial)
         {
             Figuras = new List<Figura>();
+            AccionesRelleno = new List<AccionRelleno>();
             ActualizarTamanio(anchoInicial, altoInicial);
         }
 
@@ -20,10 +29,8 @@ namespace PaintESPE.Controllers
         {
             if (ancho <= 0 || alto <= 0) return;
 
-            // Regenerar el Bitmap al cambiar el tamaño de la ventana
             Bitmap nuevoBuffer = new Bitmap(ancho, alto);
-            
-            // Pintar de blanco inicialmente por defecto usando Graphics para mayor velocidad base
+
             using (Graphics g = Graphics.FromImage(nuevoBuffer))
             {
                 g.Clear(Color.White);
@@ -31,7 +38,7 @@ namespace PaintESPE.Controllers
 
             if (_buffer != null)
             {
-                _buffer.Dispose(); // Prevenir fugas de memoria
+                _buffer.Dispose();
             }
 
             _buffer = nuevoBuffer;
@@ -41,16 +48,24 @@ namespace PaintESPE.Controllers
         {
             if (_buffer == null) return null;
 
-            // Limpiar el lienzo antes de dibujar cada frame
             using (Graphics g = Graphics.FromImage(_buffer))
             {
                 g.Clear(Color.White);
             }
 
-            // Invocar el dibujado por software (matemático) de cada figura almacenada
             foreach (var figura in Figuras)
             {
                 figura.Dibujar(_buffer);
+            }
+
+            foreach (var accion in AccionesRelleno)
+            {
+                if (accion.PuntoInicial.X >= 0 && accion.PuntoInicial.X < _buffer.Width &&
+                    accion.PuntoInicial.Y >= 0 && accion.PuntoInicial.Y < _buffer.Height)
+                {
+                    Color colorObjetivo = _buffer.GetPixel(accion.PuntoInicial.X, accion.PuntoInicial.Y);
+                    RellenoRaster.FloodFill(_buffer, accion.PuntoInicial, accion.ColorRelleno, colorObjetivo);
+                }
             }
 
             return _buffer;
@@ -64,9 +79,15 @@ namespace PaintESPE.Controllers
             }
         }
 
+        public void AgregarRelleno(Point punto, Color colorRelleno)
+        {
+            AccionesRelleno.Add(new AccionRelleno { PuntoInicial = punto, ColorRelleno = colorRelleno });
+        }
+
         public void LimpiarLienzo()
         {
             Figuras.Clear();
+            AccionesRelleno.Clear();
         }
     }
 }

@@ -51,6 +51,10 @@
     <Compile Include="Models\Rectangulo.cs" />
     <Compile Include="Models\Circulo.cs" />
     <Compile Include="Models\Poligono.cs" />
+    <Compile Include="Models\Elipse.cs" />
+    <Compile Include="Models\Triangulo.cs" />
+    <Compile Include="Models\PoligonoRegular.cs" />
+    <Compile Include="Models\Estrella.cs" />
     <Compile Include="Raster\Transformacion.cs" />
     <Compile Include="Raster\DibujoRaster.cs" />
     <Compile Include="Raster\RellenoRaster.cs" />

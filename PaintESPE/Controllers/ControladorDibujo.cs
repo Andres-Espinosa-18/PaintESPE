@@ -11,28 +11,49 @@ namespace PaintESPE.Controllers
         LineaRecta,
         Rectangulo,
         Circulo,
-        Poligono
+        Elipse,
+        Triangulo,
+        PoligonoRegular,
+        Estrella,
+        Relleno
     }
 
     public class ControladorDibujo
     {
         private GestorLienzo _gestor;
-        
+
         public HerramientaBasica HerramientaActual { get; set; } = HerramientaBasica.LapizLibre;
         public Color ColorPrimario { get; set; } = Color.Black;
-        public Color ColorSecundario { get; set; } = Color.Transparent;
+        public Color ColorSecundario { get; set; } = Color.White;
+        public Color ColorActivo { get; set; } = Color.Black;
         public int GrosorActual { get; set; } = 1;
+        public int NumeroLados { get; set; } = 5;
 
         private Point _puntoInicio;
         private bool _estaDibujando;
-        
-        // Mantiene la referencia temporal para la previsualización
+
         private Figura _figuraTemporal;
         private Poligono _trazoLibreTemporal;
 
         public ControladorDibujo(GestorLienzo gestor)
         {
             _gestor = gestor;
+        }
+
+        public void EstablecerColorActivo(bool esPrimario)
+        {
+            ColorActivo = esPrimario ? ColorPrimario : ColorSecundario;
+        }
+
+        public Bitmap ProcesarClickRelleno(int x, int y, Color colorRelleno)
+        {
+            Bitmap buffer = _gestor.Renderizar();
+            if (buffer != null && x >= 0 && x < buffer.Width && y >= 0 && y < buffer.Height)
+            {
+                _gestor.AgregarRelleno(new Point(x, y), colorRelleno);
+                return _gestor.Renderizar();
+            }
+            return buffer;
         }
 
         public void ProcesarMouseDown(int x, int y)
@@ -44,7 +65,7 @@ namespace PaintESPE.Controllers
             {
                 _trazoLibreTemporal = new Poligono(new System.Collections.Generic.List<Point> { _puntoInicio })
                 {
-                    ColorLinea = ColorPrimario,
+                    ColorLinea = ColorActivo,
                     Grosor = GrosorActual
                 };
                 _figuraTemporal = _trazoLibreTemporal;
@@ -53,53 +74,55 @@ namespace PaintESPE.Controllers
 
         public Bitmap ProcesarMouseMove(int x, int y)
         {
-            // El Gestor limpia la pantalla y redibuja las figuras confirmadas
             Bitmap buffer = _gestor.Renderizar();
-            
-            if (!_estaDibujando || buffer == null) 
+
+            if (!_estaDibujando || buffer == null)
                 return buffer;
 
             Point puntoActual = new Point(x, y);
 
-            // Generamos la instancia temporal en tiempo real dependiendo de la herramienta
             switch (HerramientaActual)
             {
                 case HerramientaBasica.LineaRecta:
-                    _figuraTemporal = new Linea(_puntoInicio, puntoActual) 
-                    { ColorLinea = ColorPrimario, Grosor = GrosorActual };
+                    _figuraTemporal = new Linea(_puntoInicio, puntoActual)
+                    { ColorLinea = ColorActivo, Grosor = GrosorActual };
                     break;
                 case HerramientaBasica.Rectangulo:
-                    _figuraTemporal = new Rectangulo(_puntoInicio, puntoActual) 
-                    { ColorLinea = ColorPrimario, ColorRelleno = ColorSecundario, Grosor = GrosorActual };
+                    _figuraTemporal = new Rectangulo(_puntoInicio, puntoActual)
+                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
                     break;
                 case HerramientaBasica.Circulo:
-                    _figuraTemporal = new Circulo(_puntoInicio, puntoActual) 
-                    { ColorLinea = ColorPrimario, ColorRelleno = ColorSecundario, Grosor = GrosorActual };
+                    _figuraTemporal = new Circulo(_puntoInicio, puntoActual)
+                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
+                    break;
+                case HerramientaBasica.Elipse:
+                    _figuraTemporal = new Elipse(_puntoInicio, puntoActual)
+                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
+                    break;
+                case HerramientaBasica.Triangulo:
+                    _figuraTemporal = new Triangulo(_puntoInicio, puntoActual)
+                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
+                    break;
+                case HerramientaBasica.PoligonoRegular:
+                    _figuraTemporal = new PoligonoRegular(_puntoInicio, puntoActual, NumeroLados)
+                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
+                    break;
+                case HerramientaBasica.Estrella:
+                    _figuraTemporal = new Estrella(_puntoInicio, puntoActual, NumeroLados)
+                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
                     break;
                 case HerramientaBasica.LapizLibre:
                     if (_trazoLibreTemporal != null)
                     {
-                        // Optimización básica para evitar duplicar puntos sin movimiento
                         Point ultimoPunto = _trazoLibreTemporal.Puntos[_trazoLibreTemporal.Puntos.Count - 1];
                         if (ultimoPunto != puntoActual)
-                        {
                             _trazoLibreTemporal.Puntos.Add(puntoActual);
-                        }
                     }
-                    break;
-                case HerramientaBasica.Poligono:
-                    // Inicialmente previsualizamos una sola línea para el primer borde
-                    _figuraTemporal = new Linea(_puntoInicio, puntoActual) 
-                    { ColorLinea = ColorPrimario, Grosor = GrosorActual };
                     break;
             }
 
-            // Dibujamos la figura en construcción por encima del buffer limpio (doble buffering en memoria).
-            // Esto previene el parpadeo ya que la vista simplemente tomará el buffer resultante listo y lo pintará de golpe.
             if (_figuraTemporal != null)
-            {
                 _figuraTemporal.Dibujar(buffer);
-            }
 
             return buffer;
         }
@@ -114,21 +137,14 @@ namespace PaintESPE.Controllers
             if (HerramientaActual == HerramientaBasica.LapizLibre)
             {
                 if (_trazoLibreTemporal != null && _trazoLibreTemporal.Puntos.Count > 1)
-                {
                     _gestor.AgregarFigura(_trazoLibreTemporal);
-                }
             }
             else
             {
-                // Consolidamos la forma enviándola a la lista permanente de GestorLienzo
-                // si realmente hubo un arrastre.
                 if (_puntoInicio != puntoFinal && _figuraTemporal != null)
-                {
                     _gestor.AgregarFigura(_figuraTemporal);
-                }
             }
 
-            // Reiniciamos temporalidades
             _figuraTemporal = null;
             _trazoLibreTemporal = null;
         }
