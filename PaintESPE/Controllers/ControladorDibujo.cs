@@ -15,6 +15,7 @@ namespace PaintESPE.Controllers
         Triangulo,
         PoligonoRegular,
         Estrella,
+        Curva,
         Relleno
     }
 
@@ -22,7 +23,20 @@ namespace PaintESPE.Controllers
     {
         private GestorLienzo _gestor;
 
-        public HerramientaBasica HerramientaActual { get; set; } = HerramientaBasica.LapizLibre;
+        private HerramientaBasica _herramientaActual = HerramientaBasica.LapizLibre;
+        public HerramientaBasica HerramientaActual
+        {
+            get => _herramientaActual;
+            set
+            {
+                _herramientaActual = value;
+                if (_herramientaActual != HerramientaBasica.Curva)
+                {
+                    _estadoCurva = 0;
+                    _figuraTemporal = null;
+                }
+            }
+        }
         public Color ColorPrimario { get; set; } = Color.Black;
         public Color ColorSecundario { get; set; } = Color.White;
         public Color ColorActivo { get; set; } = Color.Black;
@@ -33,7 +47,10 @@ namespace PaintESPE.Controllers
         private bool _estaDibujando;
 
         private Figura _figuraTemporal;
-        private Poligono _trazoLibreTemporal;
+        private TrazoLibre _trazoLibreTemporal;
+
+        private int _estadoCurva = 0;
+        private Point _p0, _p1, _p2, _p3;
 
         public ControladorDibujo(GestorLienzo gestor)
         {
@@ -63,12 +80,33 @@ namespace PaintESPE.Controllers
 
             if (HerramientaActual == HerramientaBasica.LapizLibre)
             {
-                _trazoLibreTemporal = new Poligono(new System.Collections.Generic.List<Point> { _puntoInicio })
+                _trazoLibreTemporal = new TrazoLibre(new System.Collections.Generic.List<Point> { _puntoInicio })
                 {
                     ColorLinea = ColorActivo,
                     Grosor = GrosorActual
                 };
                 _figuraTemporal = _trazoLibreTemporal;
+            }
+            else if (HerramientaActual == HerramientaBasica.Curva)
+            {
+                if (_estadoCurva == 0)
+                {
+                    _p0 = _puntoInicio;
+                    _p3 = _puntoInicio;
+                    _p1 = _puntoInicio;
+                    _p2 = _puntoInicio;
+                    _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                }
+                else if (_estadoCurva == 1)
+                {
+                    _p1 = _puntoInicio;
+                    _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                }
+                else if (_estadoCurva == 2)
+                {
+                    _p2 = _puntoInicio;
+                    _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                }
             }
         }
 
@@ -76,13 +114,38 @@ namespace PaintESPE.Controllers
         {
             Bitmap buffer = _gestor.Renderizar();
 
-            if (!_estaDibujando || buffer == null)
+            if (buffer == null) return null;
+
+            if (!_estaDibujando)
+            {
+                if (_figuraTemporal != null)
+                    _figuraTemporal.Dibujar(buffer);
                 return buffer;
+            }
 
             Point puntoActual = new Point(x, y);
 
             switch (HerramientaActual)
             {
+                case HerramientaBasica.Curva:
+                    if (_estadoCurva == 0)
+                    {
+                        _p3 = puntoActual;
+                        _p1 = new Point(_p0.X + (_p3.X - _p0.X) / 3, _p0.Y + (_p3.Y - _p0.Y) / 3);
+                        _p2 = new Point(_p0.X + 2 * (_p3.X - _p0.X) / 3, _p0.Y + 2 * (_p3.Y - _p0.Y) / 3);
+                        _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                    }
+                    else if (_estadoCurva == 1)
+                    {
+                        _p1 = puntoActual;
+                        _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                    }
+                    else if (_estadoCurva == 2)
+                    {
+                        _p2 = puntoActual;
+                        _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                    }
+                    break;
                 case HerramientaBasica.LineaRecta:
                     _figuraTemporal = new Linea(_puntoInicio, puntoActual)
                     { ColorLinea = ColorActivo, Grosor = GrosorActual };
@@ -138,6 +201,38 @@ namespace PaintESPE.Controllers
             {
                 if (_trazoLibreTemporal != null && _trazoLibreTemporal.Puntos.Count > 1)
                     _gestor.AgregarFigura(_trazoLibreTemporal);
+            }
+            else if (HerramientaActual == HerramientaBasica.Curva)
+            {
+                if (_estadoCurva == 0)
+                {
+                    _p3 = puntoFinal;
+                    _p1 = new Point(_p0.X + (_p3.X - _p0.X) / 3, _p0.Y + (_p3.Y - _p0.Y) / 3);
+                    _p2 = new Point(_p0.X + 2 * (_p3.X - _p0.X) / 3, _p0.Y + 2 * (_p3.Y - _p0.Y) / 3);
+                    if (_p0 != _p3)
+                    {
+                        _estadoCurva = 1;
+                        _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                    }
+                    else
+                    {
+                        _figuraTemporal = null;
+                    }
+                }
+                else if (_estadoCurva == 1)
+                {
+                    _p1 = puntoFinal;
+                    _estadoCurva = 2;
+                    _figuraTemporal = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                }
+                else if (_estadoCurva == 2)
+                {
+                    _p2 = puntoFinal;
+                    _estadoCurva = 0;
+                    _gestor.AgregarFigura(new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual });
+                    _figuraTemporal = null;
+                }
+                return;
             }
             else
             {

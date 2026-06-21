@@ -127,7 +127,7 @@ namespace PaintESPE.Views
             if (e.Button == MouseButtons.Left)
             {
                 _controladorDibujo.ProcesarMouseUp(e.X, e.Y);
-                _imagenRenderizada = _gestorLienzo.Renderizar();
+                _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
                 pictureBoxLienzo.Invalidate();
             }
         }
@@ -167,6 +167,7 @@ namespace PaintESPE.Views
             btnTriangulo.BackColor = normal;
             btnPoligono.BackColor = normal;
             btnEstrella.BackColor = normal;
+            btnCurva.BackColor = normal;
             btnRelleno.BackColor = normal;
 
             switch (herramienta)
@@ -179,6 +180,7 @@ namespace PaintESPE.Views
                 case HerramientaBasica.Triangulo: btnTriangulo.BackColor = highlight; break;
                 case HerramientaBasica.PoligonoRegular: btnPoligono.BackColor = highlight; break;
                 case HerramientaBasica.Estrella: btnEstrella.BackColor = highlight; break;
+                case HerramientaBasica.Curva: btnCurva.BackColor = highlight; break;
                 case HerramientaBasica.Relleno: btnRelleno.BackColor = highlight; break;
             }
         }
@@ -191,6 +193,7 @@ namespace PaintESPE.Views
         private void btnTriangulo_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Triangulo);
         private void btnPoligono_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.PoligonoRegular);
         private void btnEstrella_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Estrella);
+        private void btnCurva_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Curva);
         private void btnRelleno_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Relleno);
 
         private void ActualizarIndicadorColorActivo()

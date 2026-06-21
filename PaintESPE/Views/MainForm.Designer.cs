@@ -25,6 +25,7 @@ namespace PaintESPE.Views
             this.btnTriangulo = new System.Windows.Forms.Button();
             this.btnPoligono = new System.Windows.Forms.Button();
             this.btnEstrella = new System.Windows.Forms.Button();
+            this.btnCurva = new System.Windows.Forms.Button();
             this.btnRelleno = new System.Windows.Forms.Button();
             this.btnLimpiar = new System.Windows.Forms.Button();
             this.btnColor1 = new System.Windows.Forms.Button();
@@ -52,6 +53,7 @@ namespace PaintESPE.Views
             this.panelHerramientas.Controls.Add(this.btnTriangulo);
             this.panelHerramientas.Controls.Add(this.btnPoligono);
             this.panelHerramientas.Controls.Add(this.btnEstrella);
+            this.panelHerramientas.Controls.Add(this.btnCurva);
             this.panelHerramientas.Controls.Add(this.btnRelleno);
             this.panelHerramientas.Controls.Add(this.btnLimpiar);
             this.panelHerramientas.Controls.Add(this.btnColor1);
@@ -163,11 +165,23 @@ namespace PaintESPE.Views
             this.btnEstrella.UseVisualStyleBackColor = true;
             this.btnEstrella.Click += new System.EventHandler(this.btnEstrella_Click);
             //
+            // btnCurva
+            //
+            this.btnCurva.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCurva.FlatAppearance.BorderSize = 1;
+            this.btnCurva.Location = new System.Drawing.Point(508, 8);
+            this.btnCurva.Name = "btnCurva";
+            this.btnCurva.Size = new System.Drawing.Size(55, 26);
+            this.btnCurva.TabIndex = 22;
+            this.btnCurva.Text = "Curva";
+            this.btnCurva.UseVisualStyleBackColor = true;
+            this.btnCurva.Click += new System.EventHandler(this.btnCurva_Click);
+            //
             // btnRelleno
             //
             this.btnRelleno.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRelleno.FlatAppearance.BorderSize = 1;
-            this.btnRelleno.Location = new System.Drawing.Point(520, 8);
+            this.btnRelleno.Location = new System.Drawing.Point(568, 8);
             this.btnRelleno.Name = "btnRelleno";
             this.btnRelleno.Size = new System.Drawing.Size(60, 26);
             this.btnRelleno.TabIndex = 21;
@@ -301,6 +315,7 @@ namespace PaintESPE.Views
         private System.Windows.Forms.Button btnTriangulo;
         private System.Windows.Forms.Button btnPoligono;
         private System.Windows.Forms.Button btnEstrella;
+        private System.Windows.Forms.Button btnCurva;
         private System.Windows.Forms.Button btnRelleno;
         private System.Windows.Forms.Button btnLimpiar;
         private System.Windows.Forms.Button btnColor1;

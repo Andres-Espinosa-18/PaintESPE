@@ -145,6 +145,29 @@ namespace PaintESPE.Raster
             }
         }
 
+        public static void CurvaBezierCubica(Bitmap bmp, Point p0, Point p1, Point p2, Point p3, Color color, int grosor = 1)
+        {
+            Point ultimoPunto = p0;
+            double paso = 0.01;
+
+            for (double t = paso; t <= 1.0; t += paso)
+            {
+                double u = 1 - t;
+                double tt = t * t;
+                double uu = u * u;
+                double uuu = uu * u;
+                double ttt = tt * t;
+
+                double x = uuu * p0.X + 3 * uu * t * p1.X + 3 * u * tt * p2.X + ttt * p3.X;
+                double y = uuu * p0.Y + 3 * uu * t * p1.Y + 3 * u * tt * p2.Y + ttt * p3.Y;
+
+                Point pActual = new Point((int)Math.Round(x), (int)Math.Round(y));
+                LineaBresenham(bmp, ultimoPunto, pActual, color, grosor);
+                ultimoPunto = pActual;
+            }
+            LineaBresenham(bmp, ultimoPunto, p3, color, grosor);
+        }
+
         private static void DibujarPuntosSimetricosCirculo(Bitmap bmp, Point c, int x, int y, Color color, int grosor)
         {
             DibujarPuntoConGrosor(bmp, c.X + x, c.Y + y, color, grosor);
