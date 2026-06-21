@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using PaintESPE.Models;
+using PaintESPE.Raster;
 
 namespace PaintESPE.Controllers
 {
@@ -10,13 +11,21 @@ namespace PaintESPE.Controllers
         LapizLibre,
         LineaRecta,
         Rectangulo,
-        Circulo,
         Elipse,
         Triangulo,
         PoligonoRegular,
         Estrella,
         Curva,
-        Relleno
+        Relleno,
+        Seleccion
+    }
+
+    public enum ManejadorActivo
+    {
+        Ninguno, Cuerpo, Rotacion,
+        EscalaNO, EscalaN, EscalaNE,
+        EscalaE, EscalaSE, EscalaS,
+        EscalaSO, EscalaO
     }
 
     public class ControladorDibujo
@@ -52,6 +61,14 @@ namespace PaintESPE.Controllers
         private int _estadoCurva = 0;
         private Point _p0, _p1, _p2, _p3;
 
+        private Figura _figuraSeleccionada;
+        public Figura FiguraSeleccionada => _figuraSeleccionada;
+        private ManejadorActivo _manejadorActivo = ManejadorActivo.Ninguno;
+        private Point _puntoPrevio;
+        private Rectangle _cajaOriginal;
+        private Point _centroOriginal;
+        private double _anguloPrevio;
+
         public ControladorDibujo(GestorLienzo gestor)
         {
             _gestor = gestor;
@@ -78,7 +95,52 @@ namespace PaintESPE.Controllers
             _puntoInicio = new Point(x, y);
             _estaDibujando = true;
 
-            if (HerramientaActual == HerramientaBasica.LapizLibre)
+            if (HerramientaActual == HerramientaBasica.Seleccion)
+            {
+                _manejadorActivo = ManejadorActivo.Ninguno;
+                
+                if (_figuraSeleccionada != null)
+                {
+                    Rectangle cajaBase = _figuraSeleccionada.ObtenerAABBBase();
+                    _manejadorActivo = DeterminarManejador(_puntoInicio, _figuraSeleccionada, cajaBase);
+                    
+                    if (_manejadorActivo != ManejadorActivo.Ninguno)
+                    {
+                        _figuraSeleccionada.IniciarTransformacion();
+                        _puntoPrevio = _puntoInicio;
+                        _cajaOriginal = cajaBase;
+                        _centroOriginal = _figuraSeleccionada.CentroGeometrico;
+                        if (_manejadorActivo == ManejadorActivo.Rotacion)
+                        {
+                            _anguloPrevio = Math.Atan2(_puntoInicio.Y - _centroOriginal.Y, _puntoInicio.X - _centroOriginal.X) * 180 / Math.PI;
+                        }
+                        return;
+                    }
+                }
+
+                _figuraSeleccionada = null;
+                for (int i = _gestor.Figuras.Count - 1; i >= 0; i--)
+                {
+                    var fig = _gestor.Figuras[i];
+                    Rectangle cajaBase = fig.ObtenerAABBBase();
+                    Point clickInverso = Transformacion.Rotar(_puntoInicio, -fig.AnguloRotacion, fig.CentroGeometrico);
+                    
+                    if (cajaBase.Contains(clickInverso))
+                    {
+                        _figuraSeleccionada = fig;
+                        _figuraSeleccionada.IniciarTransformacion();
+                        _manejadorActivo = ManejadorActivo.Cuerpo;
+                        _puntoPrevio = _puntoInicio;
+                        _cajaOriginal = cajaBase;
+                        _centroOriginal = fig.CentroGeometrico;
+                        
+                        _gestor.Figuras.RemoveAt(i);
+                        _gestor.Figuras.Add(fig);
+                        break;
+                    }
+                }
+            }
+            else if (HerramientaActual == HerramientaBasica.LapizLibre)
             {
                 _trazoLibreTemporal = new TrazoLibre(new System.Collections.Generic.List<Point> { _puntoInicio })
                 {
@@ -133,6 +195,50 @@ namespace PaintESPE.Controllers
 
             switch (HerramientaActual)
             {
+                case HerramientaBasica.Seleccion:
+                    if (_figuraSeleccionada != null && _manejadorActivo != ManejadorActivo.Ninguno)
+                    {
+                        int dx = puntoActual.X - _puntoInicio.X;
+                        int dy = puntoActual.Y - _puntoInicio.Y;
+
+                        if (_manejadorActivo == ManejadorActivo.Cuerpo)
+                        {
+                            _figuraSeleccionada.Mover(dx, dy);
+                        }
+                        else if (_manejadorActivo == ManejadorActivo.Rotacion)
+                        {
+                            double anguloActual = Math.Atan2(puntoActual.Y - _centroOriginal.Y, puntoActual.X - _centroOriginal.X) * 180 / Math.PI;
+                            double difAngulo = anguloActual - _anguloPrevio;
+                            _figuraSeleccionada.Rotar((float)difAngulo, _centroOriginal);
+                        }
+                        else
+                        {
+                            float factorX = 1f;
+                            float factorY = 1f;
+                            
+                            Point puntoActualInverso = Transformacion.Rotar(puntoActual, -_figuraSeleccionada.AnguloRotacion, _centroOriginal);
+                            Point puntoInicioInverso = Transformacion.Rotar(_puntoInicio, -_figuraSeleccionada.AnguloRotacion, _centroOriginal);
+
+                            if (_manejadorActivo == ManejadorActivo.EscalaE || _manejadorActivo == ManejadorActivo.EscalaNE || _manejadorActivo == ManejadorActivo.EscalaSE || 
+                                _manejadorActivo == ManejadorActivo.EscalaO || _manejadorActivo == ManejadorActivo.EscalaNO || _manejadorActivo == ManejadorActivo.EscalaSO)
+                            {
+                                float distPrev = Math.Abs(puntoInicioInverso.X - _centroOriginal.X);
+                                float distAct = Math.Abs(puntoActualInverso.X - _centroOriginal.X);
+                                if (distPrev > 0) factorX = distAct / distPrev;
+                            }
+
+                            if (_manejadorActivo == ManejadorActivo.EscalaS || _manejadorActivo == ManejadorActivo.EscalaSE || _manejadorActivo == ManejadorActivo.EscalaSO ||
+                                _manejadorActivo == ManejadorActivo.EscalaN || _manejadorActivo == ManejadorActivo.EscalaNE || _manejadorActivo == ManejadorActivo.EscalaNO)
+                            {
+                                float distPrev = Math.Abs(puntoInicioInverso.Y - _centroOriginal.Y);
+                                float distAct = Math.Abs(puntoActualInverso.Y - _centroOriginal.Y);
+                                if (distPrev > 0) factorY = distAct / distPrev;
+                            }
+                            
+                            _figuraSeleccionada.Escalar(factorX, factorY, _centroOriginal);
+                        }
+                    }
+                    break;
                 case HerramientaBasica.Curva:
                     if (_estadoCurva == 0)
                     {
@@ -160,10 +266,7 @@ namespace PaintESPE.Controllers
                     _figuraTemporal = new Rectangulo(_puntoInicio, puntoActual)
                     { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
                     break;
-                case HerramientaBasica.Circulo:
-                    _figuraTemporal = new Circulo(_puntoInicio, puntoActual)
-                    { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
-                    break;
+
                 case HerramientaBasica.Elipse:
                     _figuraTemporal = new Elipse(_puntoInicio, puntoActual)
                     { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
@@ -212,7 +315,10 @@ namespace PaintESPE.Controllers
             if (HerramientaActual == HerramientaBasica.LapizLibre)
             {
                 if (_trazoLibreTemporal != null && _trazoLibreTemporal.Puntos.Count > 1)
+                {
                     _gestor.AgregarFigura(_trazoLibreTemporal);
+                    AutoSeleccionar(_trazoLibreTemporal);
+                }
             }
             else if (HerramientaActual == HerramientaBasica.Curva)
             {
@@ -241,19 +347,64 @@ namespace PaintESPE.Controllers
                 {
                     _p2 = puntoFinal;
                     _estadoCurva = 0;
-                    _gestor.AgregarFigura(new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual });
+                    var curva = new CurvaBezier(_p0, _p1, _p2, _p3) { ColorLinea = ColorActivo, Grosor = GrosorActual };
+                    _gestor.AgregarFigura(curva);
+                    AutoSeleccionar(curva);
                     _figuraTemporal = null;
                 }
                 return;
             }
-            else
+            else if (HerramientaActual != HerramientaBasica.Seleccion)
             {
                 if (_puntoInicio != puntoFinal && _figuraTemporal != null)
+                {
                     _gestor.AgregarFigura(_figuraTemporal);
+                    AutoSeleccionar(_figuraTemporal);
+                }
             }
 
             _figuraTemporal = null;
             _trazoLibreTemporal = null;
+        }
+
+        private void AutoSeleccionar(Figura figura)
+        {
+            HerramientaActual = HerramientaBasica.Seleccion;
+            _figuraSeleccionada = figura;
+            
+            if (figura.CentroGeometrico == Point.Empty)
+            {
+                Rectangle baseCaja = figura.ObtenerAABBBase();
+                figura.CentroGeometrico = new Point(baseCaja.Left + baseCaja.Width / 2, baseCaja.Top + baseCaja.Height / 2);
+            }
+
+            _figuraSeleccionada.IniciarTransformacion();
+            _cajaOriginal = _figuraSeleccionada.ObtenerAABBBase();
+            _centroOriginal = _figuraSeleccionada.CentroGeometrico;
+            _manejadorActivo = ManejadorActivo.Ninguno;
+        }
+
+        private ManejadorActivo DeterminarManejador(Point click, Figura fig, Rectangle cajaBase)
+        {
+            Point clickInverso = Transformacion.Rotar(click, -fig.AnguloRotacion, fig.CentroGeometrico);
+            int r = PaintESPE.Raster.DibujoSeleccion.TamañoManejador / 2;
+            int r2 = 4;
+            
+            Point rotHandle = new Point(cajaBase.Left + cajaBase.Width / 2, cajaBase.Top - PaintESPE.Raster.DibujoSeleccion.DistanciaRotacion);
+            if (new Rectangle(rotHandle.X - r2, rotHandle.Y - r2, r2 * 2, r2 * 2).Contains(clickInverso)) return ManejadorActivo.Rotacion;
+
+            if (new Rectangle(cajaBase.Left - r, cajaBase.Top - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaNO;
+            if (new Rectangle(cajaBase.Left + cajaBase.Width / 2 - r, cajaBase.Top - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaN;
+            if (new Rectangle(cajaBase.Right - r, cajaBase.Top - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaNE;
+            if (new Rectangle(cajaBase.Right - r, cajaBase.Top + cajaBase.Height / 2 - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaE;
+            if (new Rectangle(cajaBase.Right - r, cajaBase.Bottom - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaSE;
+            if (new Rectangle(cajaBase.Left + cajaBase.Width / 2 - r, cajaBase.Bottom - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaS;
+            if (new Rectangle(cajaBase.Left - r, cajaBase.Bottom - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaSO;
+            if (new Rectangle(cajaBase.Left - r, cajaBase.Top + cajaBase.Height / 2 - r, r * 2, r * 2).Contains(clickInverso)) return ManejadorActivo.EscalaO;
+
+            if (cajaBase.Contains(clickInverso)) return ManejadorActivo.Cuerpo;
+
+            return ManejadorActivo.Ninguno;
         }
     }
 }

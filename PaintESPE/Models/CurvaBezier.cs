@@ -20,5 +20,7 @@ namespace PaintESPE.Models
                 DibujoRaster.CurvaBezierCubica(lienzo, Puntos[0], Puntos[1], Puntos[2], Puntos[3], ColorLinea, Grosor);
             }
         }
+
+
     }
 }

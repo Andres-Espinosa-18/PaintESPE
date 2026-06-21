@@ -20,13 +20,13 @@ namespace PaintESPE.Views
             this.btnLapiz = new System.Windows.Forms.Button();
             this.btnLinea = new System.Windows.Forms.Button();
             this.btnRectangulo = new System.Windows.Forms.Button();
-            this.btnCirculo = new System.Windows.Forms.Button();
             this.btnElipse = new System.Windows.Forms.Button();
             this.btnTriangulo = new System.Windows.Forms.Button();
             this.btnPoligono = new System.Windows.Forms.Button();
             this.btnEstrella = new System.Windows.Forms.Button();
             this.btnCurva = new System.Windows.Forms.Button();
             this.btnRelleno = new System.Windows.Forms.Button();
+            this.btnSeleccion = new System.Windows.Forms.Button();
             this.btnLimpiar = new System.Windows.Forms.Button();
             this.btnColor1 = new System.Windows.Forms.Button();
             this.btnColor2 = new System.Windows.Forms.Button();
@@ -48,13 +48,13 @@ namespace PaintESPE.Views
             this.panelHerramientas.Controls.Add(this.btnLapiz);
             this.panelHerramientas.Controls.Add(this.btnLinea);
             this.panelHerramientas.Controls.Add(this.btnRectangulo);
-            this.panelHerramientas.Controls.Add(this.btnCirculo);
             this.panelHerramientas.Controls.Add(this.btnElipse);
             this.panelHerramientas.Controls.Add(this.btnTriangulo);
             this.panelHerramientas.Controls.Add(this.btnPoligono);
             this.panelHerramientas.Controls.Add(this.btnEstrella);
             this.panelHerramientas.Controls.Add(this.btnCurva);
             this.panelHerramientas.Controls.Add(this.btnRelleno);
+            this.panelHerramientas.Controls.Add(this.btnSeleccion);
             this.panelHerramientas.Controls.Add(this.btnLimpiar);
             this.panelHerramientas.Controls.Add(this.btnColor1);
             this.panelHerramientas.Controls.Add(this.btnColor2);
@@ -105,23 +105,11 @@ namespace PaintESPE.Views
             this.btnRectangulo.UseVisualStyleBackColor = true;
             this.btnRectangulo.Click += new System.EventHandler(this.btnRectangulo_Click);
             //
-            // btnCirculo
-            //
-            this.btnCirculo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCirculo.FlatAppearance.BorderSize = 1;
-            this.btnCirculo.Location = new System.Drawing.Point(193, 8);
-            this.btnCirculo.Name = "btnCirculo";
-            this.btnCirculo.Size = new System.Drawing.Size(55, 26);
-            this.btnCirculo.TabIndex = 3;
-            this.btnCirculo.Text = "Círculo";
-            this.btnCirculo.UseVisualStyleBackColor = true;
-            this.btnCirculo.Click += new System.EventHandler(this.btnCirculo_Click);
-            //
             // btnElipse
             //
             this.btnElipse.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnElipse.FlatAppearance.BorderSize = 1;
-            this.btnElipse.Location = new System.Drawing.Point(253, 8);
+            this.btnElipse.Location = new System.Drawing.Point(193, 8);
             this.btnElipse.Name = "btnElipse";
             this.btnElipse.Size = new System.Drawing.Size(55, 26);
             this.btnElipse.TabIndex = 4;
@@ -133,7 +121,7 @@ namespace PaintESPE.Views
             //
             this.btnTriangulo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnTriangulo.FlatAppearance.BorderSize = 1;
-            this.btnTriangulo.Location = new System.Drawing.Point(313, 8);
+            this.btnTriangulo.Location = new System.Drawing.Point(253, 8);
             this.btnTriangulo.Name = "btnTriangulo";
             this.btnTriangulo.Size = new System.Drawing.Size(60, 26);
             this.btnTriangulo.TabIndex = 5;
@@ -145,7 +133,7 @@ namespace PaintESPE.Views
             //
             this.btnPoligono.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnPoligono.FlatAppearance.BorderSize = 1;
-            this.btnPoligono.Location = new System.Drawing.Point(378, 8);
+            this.btnPoligono.Location = new System.Drawing.Point(318, 8);
             this.btnPoligono.Name = "btnPoligono";
             this.btnPoligono.Size = new System.Drawing.Size(60, 26);
             this.btnPoligono.TabIndex = 6;
@@ -157,7 +145,7 @@ namespace PaintESPE.Views
             //
             this.btnEstrella.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnEstrella.FlatAppearance.BorderSize = 1;
-            this.btnEstrella.Location = new System.Drawing.Point(443, 8);
+            this.btnEstrella.Location = new System.Drawing.Point(383, 8);
             this.btnEstrella.Name = "btnEstrella";
             this.btnEstrella.Size = new System.Drawing.Size(60, 26);
             this.btnEstrella.TabIndex = 7;
@@ -169,7 +157,7 @@ namespace PaintESPE.Views
             //
             this.btnCurva.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCurva.FlatAppearance.BorderSize = 1;
-            this.btnCurva.Location = new System.Drawing.Point(508, 8);
+            this.btnCurva.Location = new System.Drawing.Point(448, 8);
             this.btnCurva.Name = "btnCurva";
             this.btnCurva.Size = new System.Drawing.Size(55, 26);
             this.btnCurva.TabIndex = 22;
@@ -181,7 +169,7 @@ namespace PaintESPE.Views
             //
             this.btnRelleno.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRelleno.FlatAppearance.BorderSize = 1;
-            this.btnRelleno.Location = new System.Drawing.Point(568, 8);
+            this.btnRelleno.Location = new System.Drawing.Point(508, 8);
             this.btnRelleno.Name = "btnRelleno";
             this.btnRelleno.Size = new System.Drawing.Size(60, 26);
             this.btnRelleno.TabIndex = 21;
@@ -189,11 +177,23 @@ namespace PaintESPE.Views
             this.btnRelleno.UseVisualStyleBackColor = true;
             this.btnRelleno.Click += new System.EventHandler(this.btnRelleno_Click);
             //
+            // btnSeleccion
+            //
+            this.btnSeleccion.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnSeleccion.FlatAppearance.BorderSize = 1;
+            this.btnSeleccion.Location = new System.Drawing.Point(573, 8);
+            this.btnSeleccion.Name = "btnSeleccion";
+            this.btnSeleccion.Size = new System.Drawing.Size(63, 26);
+            this.btnSeleccion.TabIndex = 23;
+            this.btnSeleccion.Text = "Selección";
+            this.btnSeleccion.UseVisualStyleBackColor = true;
+            this.btnSeleccion.Click += new System.EventHandler(this.btnSeleccion_Click);
+            //
             // btnLimpiar
             //
             this.btnLimpiar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLimpiar.FlatAppearance.BorderSize = 1;
-            this.btnLimpiar.Location = new System.Drawing.Point(700, 8);
+            this.btnLimpiar.Location = new System.Drawing.Point(640, 8);
             this.btnLimpiar.Name = "btnLimpiar";
             this.btnLimpiar.Size = new System.Drawing.Size(65, 26);
             this.btnLimpiar.TabIndex = 8;
@@ -310,13 +310,13 @@ namespace PaintESPE.Views
         private System.Windows.Forms.Button btnLapiz;
         private System.Windows.Forms.Button btnLinea;
         private System.Windows.Forms.Button btnRectangulo;
-        private System.Windows.Forms.Button btnCirculo;
         private System.Windows.Forms.Button btnElipse;
         private System.Windows.Forms.Button btnTriangulo;
         private System.Windows.Forms.Button btnPoligono;
         private System.Windows.Forms.Button btnEstrella;
         private System.Windows.Forms.Button btnCurva;
         private System.Windows.Forms.Button btnRelleno;
+        private System.Windows.Forms.Button btnSeleccion;
         private System.Windows.Forms.Button btnLimpiar;
         private System.Windows.Forms.Button btnColor1;
         private System.Windows.Forms.Button btnColor2;

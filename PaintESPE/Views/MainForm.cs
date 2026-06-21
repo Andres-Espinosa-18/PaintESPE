@@ -109,6 +109,11 @@ namespace PaintESPE.Views
                 else
                 {
                     _controladorDibujo.ProcesarMouseDown(e.X, e.Y);
+                    if (_controladorDibujo.HerramientaActual == HerramientaBasica.Seleccion)
+                    {
+                        _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
+                        pictureBoxLienzo.Invalidate();
+                    }
                 }
             }
         }
@@ -126,7 +131,14 @@ namespace PaintESPE.Views
         {
             if (e.Button == MouseButtons.Left)
             {
+                HerramientaBasica prevTool = _controladorDibujo.HerramientaActual;
                 _controladorDibujo.ProcesarMouseUp(e.X, e.Y);
+                
+                if (prevTool != HerramientaBasica.Seleccion && _controladorDibujo.HerramientaActual == HerramientaBasica.Seleccion)
+                {
+                    ResaltarBotonHerramienta(HerramientaBasica.Seleccion);
+                }
+
                 _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
                 pictureBoxLienzo.Invalidate();
             }
@@ -136,6 +148,57 @@ namespace PaintESPE.Views
         {
             if (_imagenRenderizada != null)
                 e.Graphics.DrawImageUnscaled(_imagenRenderizada, 0, 0);
+
+            if (_controladorDibujo.HerramientaActual == HerramientaBasica.Seleccion && _controladorDibujo.FiguraSeleccionada != null)
+            {
+                var fig = _controladorDibujo.FiguraSeleccionada;
+                Point[] esquinas = fig.ObtenerPuntosCaja();
+                Rectangle cajaBase = fig.ObtenerAABBBase();
+
+                if (esquinas.Length == 4 && cajaBase.Width > 0 && cajaBase.Height > 0)
+                {
+                    using (Pen penBorde = new Pen(Color.DarkGray, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
+                    {
+                        e.Graphics.DrawPolygon(penBorde, esquinas);
+                    }
+
+                    int r = PaintESPE.Raster.DibujoSeleccion.TamañoManejador / 2;
+                    Point[] handlesLocales = new Point[] {
+                        new Point(cajaBase.Left, cajaBase.Top),
+                        new Point(cajaBase.Left + cajaBase.Width / 2, cajaBase.Top),
+                        new Point(cajaBase.Right, cajaBase.Top),
+                        new Point(cajaBase.Right, cajaBase.Top + cajaBase.Height / 2),
+                        new Point(cajaBase.Right, cajaBase.Bottom),
+                        new Point(cajaBase.Left + cajaBase.Width / 2, cajaBase.Bottom),
+                        new Point(cajaBase.Left, cajaBase.Bottom),
+                        new Point(cajaBase.Left, cajaBase.Top + cajaBase.Height / 2)
+                    };
+
+                    foreach (var pLocal in handlesLocales)
+                    {
+                        Point p = PaintESPE.Raster.Transformacion.Rotar(pLocal, fig.AnguloRotacion, fig.CentroGeometrico);
+                        Rectangle rect = new Rectangle(p.X - r, p.Y - r, r * 2, r * 2);
+                        e.Graphics.FillRectangle(Brushes.White, rect);
+                        e.Graphics.DrawRectangle(Pens.Black, rect);
+                    }
+
+                    Point centroSuperiorLocal = new Point(cajaBase.Left + cajaBase.Width / 2, cajaBase.Top);
+                    Point rotHandleLocal = new Point(centroSuperiorLocal.X, centroSuperiorLocal.Y - PaintESPE.Raster.DibujoSeleccion.DistanciaRotacion);
+                    
+                    Point centroSuperior = PaintESPE.Raster.Transformacion.Rotar(centroSuperiorLocal, fig.AnguloRotacion, fig.CentroGeometrico);
+                    Point rotHandle = PaintESPE.Raster.Transformacion.Rotar(rotHandleLocal, fig.AnguloRotacion, fig.CentroGeometrico);
+
+                    using (Pen penLinea = new Pen(Color.DarkGray, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash })
+                    {
+                        e.Graphics.DrawLine(penLinea, centroSuperior, rotHandle);
+                    }
+                    
+                    int r2 = 4;
+                    Rectangle rectRot = new Rectangle(rotHandle.X - r2, rotHandle.Y - r2, r2 * 2, r2 * 2);
+                    e.Graphics.FillEllipse(Brushes.White, rectRot);
+                    e.Graphics.DrawEllipse(Pens.Black, rectRot);
+                }
+            }
         }
 
         private void PictureBoxLienzo_Resize(object sender, EventArgs e)
@@ -162,39 +225,39 @@ namespace PaintESPE.Views
             btnLapiz.BackColor = normal;
             btnLinea.BackColor = normal;
             btnRectangulo.BackColor = normal;
-            btnCirculo.BackColor = normal;
             btnElipse.BackColor = normal;
             btnTriangulo.BackColor = normal;
             btnPoligono.BackColor = normal;
             btnEstrella.BackColor = normal;
             btnCurva.BackColor = normal;
             btnRelleno.BackColor = normal;
+            btnSeleccion.BackColor = normal;
 
             switch (herramienta)
             {
                 case HerramientaBasica.LapizLibre: btnLapiz.BackColor = highlight; break;
                 case HerramientaBasica.LineaRecta: btnLinea.BackColor = highlight; break;
                 case HerramientaBasica.Rectangulo: btnRectangulo.BackColor = highlight; break;
-                case HerramientaBasica.Circulo: btnCirculo.BackColor = highlight; break;
                 case HerramientaBasica.Elipse: btnElipse.BackColor = highlight; break;
                 case HerramientaBasica.Triangulo: btnTriangulo.BackColor = highlight; break;
                 case HerramientaBasica.PoligonoRegular: btnPoligono.BackColor = highlight; break;
                 case HerramientaBasica.Estrella: btnEstrella.BackColor = highlight; break;
                 case HerramientaBasica.Curva: btnCurva.BackColor = highlight; break;
                 case HerramientaBasica.Relleno: btnRelleno.BackColor = highlight; break;
+                case HerramientaBasica.Seleccion: btnSeleccion.BackColor = highlight; break;
             }
         }
 
         private void btnLapiz_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.LapizLibre);
         private void btnLinea_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.LineaRecta);
         private void btnRectangulo_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Rectangulo);
-        private void btnCirculo_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Circulo);
         private void btnElipse_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Elipse);
         private void btnTriangulo_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Triangulo);
         private void btnPoligono_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.PoligonoRegular);
         private void btnEstrella_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Estrella);
         private void btnCurva_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Curva);
         private void btnRelleno_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Relleno);
+        private void btnSeleccion_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Seleccion);
 
         private void ActualizarIndicadorColorActivo()
         {

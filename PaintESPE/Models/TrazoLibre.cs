@@ -20,5 +20,7 @@ namespace PaintESPE.Models
                 DibujoRaster.LineaBresenham(lienzo, Puntos[i], Puntos[i + 1], ColorLinea, Grosor);
             }
         }
+
+
     }
 }

@@ -47,50 +47,46 @@ namespace PaintESPE.Raster
             }
         }
 
-        public static void ElipseBresenham(FastBitmap bmp, int x0, int y0, int x1, int y1, Color color, int grosor = 1)
+        public static void ElipseRotadaParametrica(FastBitmap bmp, Point centro, int rx, int ry, float anguloGrados, Color color, int grosor = 1)
         {
-            int cx = (x0 + x1) / 2;
-            int cy = (y0 + y1) / 2;
-            int rx = Math.Abs(x1 - x0) / 2;
-            int ry = Math.Abs(y1 - y0) / 2;
+            if (rx <= 0 || ry <= 0) return;
 
-            if (rx == 0 || ry == 0) return;
+            float theta = (float)(anguloGrados * Math.PI / 180.0);
+            float cosTheta = (float)Math.Cos(theta);
+            float sinTheta = (float)Math.Sin(theta);
 
-            int x = 0, y = ry;
-            int rx2 = rx * rx;
-            int ry2 = ry * ry;
-            int p = ry2 - rx2 * ry + rx2 / 4;
+            // Calcular paso dinámico para mantener suavidad
+            double perimetroAprox = Math.PI * (3 * (rx + ry) - Math.Sqrt((3 * rx + ry) * (rx + 3 * ry)));
+            double paso = perimetroAprox > 0 ? Math.Max(0.005, 2.0 / perimetroAprox) : 0.02;
 
-            while (2 * ry2 * x <= 2 * rx2 * y)
+            Point? ultimoPunto = null;
+            Point primerPunto = Point.Empty;
+
+            for (double t = 0; t <= 2 * Math.PI; t += paso)
             {
-                DibujarPuntosSimetricosElipse(bmp, cx, cy, x, y, color, grosor);
-                x++;
-                if (p < 0)
+                float cosT = (float)Math.Cos(t);
+                float sinT = (float)Math.Sin(t);
+
+                int x = (int)Math.Round(centro.X + rx * cosT * cosTheta - ry * sinT * sinTheta);
+                int y = (int)Math.Round(centro.Y + rx * cosT * sinTheta + ry * sinT * cosTheta);
+                
+                Point pActual = new Point(x, y);
+
+                if (ultimoPunto.HasValue)
                 {
-                    p += 2 * ry2 * x + ry2;
+                    LineaBresenham(bmp, ultimoPunto.Value, pActual, color, grosor);
                 }
                 else
                 {
-                    y--;
-                    p += 2 * ry2 * x - 2 * rx2 * y + ry2;
+                    primerPunto = pActual;
                 }
+                
+                ultimoPunto = pActual;
             }
-
-            int p2 = (int)(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
-
-            while (y > 0)
+            
+            if (ultimoPunto.HasValue && ultimoPunto.Value != primerPunto)
             {
-                DibujarPuntosSimetricosElipse(bmp, cx, cy, x, y, color, grosor);
-                y--;
-                if (p2 > 0)
-                {
-                    p2 -= 2 * rx2 * y + rx2;
-                }
-                else
-                {
-                    x++;
-                    p2 += 2 * ry2 * x - 2 * rx2 * y + rx2;
-                }
+                LineaBresenham(bmp, ultimoPunto.Value, primerPunto, color, grosor);
             }
         }
 
@@ -122,26 +118,42 @@ namespace PaintESPE.Raster
             }
         }
 
-        public static void RellenarElipse(FastBitmap bmp, int x0, int y0, int x1, int y1, Color color)
+        public static void RellenarElipseRotada(FastBitmap bmp, Point centro, int rx, int ry, float anguloGrados, Color color)
         {
-            int cx = (x0 + x1) / 2;
-            int cy = (y0 + y1) / 2;
-            double rx = Math.Abs(x1 - x0) / 2.0;
-            double ry = Math.Abs(y1 - y0) / 2.0;
-
             if (rx < 1 || ry < 1) return;
 
-            int yStart = Math.Max(0, cy - (int)Math.Ceiling(ry));
-            int yEnd = Math.Min(bmp.Height - 1, cy + (int)Math.Ceiling(ry));
+            // Encontrar la caja delimitadora (Bounding Box) de la elipse rotada
+            float theta = (float)(anguloGrados * Math.PI / 180.0);
+            float cosTheta = (float)Math.Cos(theta);
+            float sinTheta = (float)Math.Sin(theta);
 
-            for (int y = yStart; y <= yEnd; y++)
+            int halfWidth = (int)Math.Ceiling(Math.Sqrt(rx * rx * cosTheta * cosTheta + ry * ry * sinTheta * sinTheta));
+            int halfHeight = (int)Math.Ceiling(Math.Sqrt(rx * rx * sinTheta * sinTheta + ry * ry * cosTheta * cosTheta));
+
+            int minX = Math.Max(0, centro.X - halfWidth);
+            int maxX = Math.Min(bmp.Width - 1, centro.X + halfWidth);
+            int minY = Math.Max(0, centro.Y - halfHeight);
+            int maxY = Math.Min(bmp.Height - 1, centro.Y + halfHeight);
+
+            double rx2 = rx * rx;
+            double ry2 = ry * ry;
+
+            for (int y = minY; y <= maxY; y++)
             {
-                double dy = y - cy;
-                double dx = rx * Math.Sqrt(Math.Max(0, 1 - (dy * dy) / (ry * ry)));
-                int xStart = Math.Max(0, cx - (int)Math.Ceiling(dx));
-                int xEnd = Math.Min(bmp.Width - 1, cx + (int)Math.Ceiling(dx));
-                for (int x = xStart; x <= xEnd; x++)
-                    bmp.SetPixelRapido(x, y, color);
+                for (int x = minX; x <= maxX; x++)
+                {
+                    // Des-rotar el punto
+                    double dx = x - centro.X;
+                    double dy = y - centro.Y;
+                    double unrotatedX = dx * cosTheta + dy * sinTheta;
+                    double unrotatedY = -dx * sinTheta + dy * cosTheta;
+
+                    // Ecuación de la elipse: (x^2 / rx^2) + (y^2 / ry^2) <= 1
+                    if ((unrotatedX * unrotatedX) / rx2 + (unrotatedY * unrotatedY) / ry2 <= 1.0)
+                    {
+                        bmp.SetPixelRapido(x, y, color);
+                    }
+                }
             }
         }
 
@@ -180,13 +192,7 @@ namespace PaintESPE.Raster
             DibujarPuntoConGrosor(bmp, c.X + x, c.Y - y, color, grosor);
         }
 
-        private static void DibujarPuntosSimetricosElipse(FastBitmap bmp, int cx, int cy, int x, int y, Color color, int grosor)
-        {
-            DibujarPuntoConGrosor(bmp, cx + x, cy + y, color, grosor);
-            DibujarPuntoConGrosor(bmp, cx - x, cy + y, color, grosor);
-            DibujarPuntoConGrosor(bmp, cx + x, cy - y, color, grosor);
-            DibujarPuntoConGrosor(bmp, cx - x, cy - y, color, grosor);
-        }
+
 
         private static void DibujarPuntoConGrosor(FastBitmap bmp, int x, int y, Color color, int grosor)
         {

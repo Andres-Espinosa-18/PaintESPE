@@ -16,19 +16,26 @@ namespace PaintESPE.Models
 
         public override void Dibujar(FastBitmap lienzo)
         {
-            if (Puntos.Count < 4) return;
+            Rectangle aabb = ObtenerAABBBase();
+            if (aabb.Width == 0 || aabb.Height == 0) return;
 
-            int x0 = Math.Min(Puntos[0].X, Puntos[2].X);
-            int y0 = Math.Min(Puntos[0].Y, Puntos[2].Y);
-            int x1 = Math.Max(Puntos[0].X, Puntos[2].X);
-            int y1 = Math.Max(Puntos[0].Y, Puntos[2].Y);
+            int rx = aabb.Width / 2;
+            int ry = aabb.Height / 2;
+
+            Point centro = CentroGeometrico;
+            if (centro == Point.Empty)
+            {
+                centro = new Point(aabb.Left + rx, aabb.Top + ry);
+            }
 
             if (ColorRelleno != Color.Transparent)
             {
-                DibujoRaster.RellenarElipse(lienzo, x0, y0, x1, y1, ColorRelleno);
+                DibujoRaster.RellenarElipseRotada(lienzo, centro, rx, ry, AnguloRotacion, ColorRelleno);
             }
 
-            DibujoRaster.ElipseBresenham(lienzo, x0, y0, x1, y1, ColorLinea, Grosor);
+            DibujoRaster.ElipseRotadaParametrica(lienzo, centro, rx, ry, AnguloRotacion, ColorLinea, Grosor);
         }
+
+
     }
 }

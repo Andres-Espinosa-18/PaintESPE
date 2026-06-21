@@ -51,7 +51,7 @@
     <Compile Include="Models\Figura.cs" />
     <Compile Include="Models\Linea.cs" />
     <Compile Include="Models\Rectangulo.cs" />
-    <Compile Include="Models\Circulo.cs" />
+
     <Compile Include="Models\Poligono.cs" />
     <Compile Include="Models\Elipse.cs" />
     <Compile Include="Models\Triangulo.cs" />
@@ -63,6 +63,7 @@
     <Compile Include="Raster\FastBitmap.cs" />
     <Compile Include="Raster\DibujoRaster.cs" />
     <Compile Include="Raster\RellenoRaster.cs" />
+    <Compile Include="Raster\DibujoSeleccion.cs" />
     <Compile Include="Controllers\GestorLienzo.cs" />
     <Compile Include="Controllers\ControladorDibujo.cs" />
     <Compile Include="Views\MainForm.cs">
