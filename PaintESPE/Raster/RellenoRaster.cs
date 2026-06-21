@@ -6,7 +6,7 @@ namespace PaintESPE.Raster
 {
     public static class RellenoRaster
     {
-        public static void FloodFill(Bitmap bmp, Point puntoInicial, Color colorRelleno, Color colorFondo)
+        public static void FloodFill(FastBitmap bmp, Point puntoInicial, Color colorRelleno, Color colorFondo)
         {
             if (colorRelleno.ToArgb() == colorFondo.ToArgb()) return;
 
@@ -15,7 +15,7 @@ namespace PaintESPE.Raster
 
             if (puntoInicial.X < 0 || puntoInicial.X >= ancho || puntoInicial.Y < 0 || puntoInicial.Y >= alto) return;
 
-            Color colorActual = bmp.GetPixel(puntoInicial.X, puntoInicial.Y);
+            Color colorActual = bmp.GetPixelRapido(puntoInicial.X, puntoInicial.Y);
             if (colorActual.ToArgb() != colorFondo.ToArgb()) return;
 
             Queue<Point> cola = new Queue<Point>();
@@ -27,9 +27,9 @@ namespace PaintESPE.Raster
 
                 if (p.X < 0 || p.X >= ancho || p.Y < 0 || p.Y >= alto) continue;
 
-                if (bmp.GetPixel(p.X, p.Y).ToArgb() == colorFondo.ToArgb())
+                if (bmp.GetPixelRapido(p.X, p.Y).ToArgb() == colorFondo.ToArgb())
                 {
-                    bmp.SetPixel(p.X, p.Y, colorRelleno);
+                    bmp.SetPixelRapido(p.X, p.Y, colorRelleno);
 
                     cola.Enqueue(new Point(p.X + 1, p.Y));
                     cola.Enqueue(new Point(p.X - 1, p.Y));
@@ -39,7 +39,7 @@ namespace PaintESPE.Raster
             }
         }
 
-        public static void RellenarPoligono(Bitmap bmp, List<Point> vertices, Color color)
+        public static void RellenarPoligono(FastBitmap bmp, List<Point> vertices, Color color)
         {
             if (vertices.Count < 3) return;
 
@@ -82,7 +82,7 @@ namespace PaintESPE.Raster
                     xEnd = Math.Min(bmp.Width - 1, xEnd);
 
                     for (int x = xStart; x <= xEnd; x++)
-                        bmp.SetPixel(x, y, color);
+                        bmp.SetPixelRapido(x, y, color);
                 }
             }
         }

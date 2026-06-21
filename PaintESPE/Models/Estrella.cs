@@ -24,7 +24,7 @@ namespace PaintESPE.Models
             }
         }
 
-        public override void Dibujar(Bitmap lienzo)
+        public override void Dibujar(FastBitmap lienzo)
         {
             if (Puntos.Count < 4) return;
 

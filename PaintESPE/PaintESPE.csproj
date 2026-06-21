@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -58,6 +60,7 @@
     <Compile Include="Models\TrazoLibre.cs" />
     <Compile Include="Models\CurvaBezier.cs" />
     <Compile Include="Raster\Transformacion.cs" />
+    <Compile Include="Raster\FastBitmap.cs" />
     <Compile Include="Raster\DibujoRaster.cs" />
     <Compile Include="Raster\RellenoRaster.cs" />
     <Compile Include="Controllers\GestorLienzo.cs" />

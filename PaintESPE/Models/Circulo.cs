@@ -12,7 +12,7 @@ namespace PaintESPE.Models
             Puntos.Add(borde);
         }
 
-        public override void Dibujar(Bitmap lienzo)
+        public override void Dibujar(FastBitmap lienzo)
         {
             if (Puntos.Count < 2) return;
 

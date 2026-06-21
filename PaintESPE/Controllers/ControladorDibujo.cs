@@ -119,7 +119,13 @@ namespace PaintESPE.Controllers
             if (!_estaDibujando)
             {
                 if (_figuraTemporal != null)
-                    _figuraTemporal.Dibujar(buffer);
+                {
+                    using (PaintESPE.Raster.FastBitmap fb = new PaintESPE.Raster.FastBitmap(buffer))
+                    {
+                        fb.Bloquear();
+                        _figuraTemporal.Dibujar(fb);
+                    }
+                }
                 return buffer;
             }
 
@@ -185,7 +191,13 @@ namespace PaintESPE.Controllers
             }
 
             if (_figuraTemporal != null)
-                _figuraTemporal.Dibujar(buffer);
+            {
+                using (PaintESPE.Raster.FastBitmap fb = new PaintESPE.Raster.FastBitmap(buffer))
+                {
+                    fb.Bloquear();
+                    _figuraTemporal.Dibujar(fb);
+                }
+            }
 
             return buffer;
         }

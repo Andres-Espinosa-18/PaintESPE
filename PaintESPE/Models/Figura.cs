@@ -13,7 +13,7 @@ namespace PaintESPE.Models
         // Puntos base de la figura para renderizar y transformar
         public List<Point> Puntos { get; set; } = new List<Point>();
 
-        public abstract void Dibujar(Bitmap lienzo);
+        public abstract void Dibujar(FastBitmap lienzo);
 
         public virtual void Trasladar(int dx, int dy)
         {

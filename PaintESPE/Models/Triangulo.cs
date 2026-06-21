@@ -18,7 +18,7 @@ namespace PaintESPE.Models
             Puntos.Add(new Point((minX + maxX) / 2, minY));
         }
 
-        public override void Dibujar(Bitmap lienzo)
+        public override void Dibujar(FastBitmap lienzo)
         {
             if (Puntos.Count < 3) return;
 

@@ -53,18 +53,23 @@ namespace PaintESPE.Controllers
                 g.Clear(Color.White);
             }
 
-            foreach (var figura in Figuras)
+            using (FastBitmap fb = new FastBitmap(_buffer))
             {
-                figura.Dibujar(_buffer);
-            }
+                fb.Bloquear();
 
-            foreach (var accion in AccionesRelleno)
-            {
-                if (accion.PuntoInicial.X >= 0 && accion.PuntoInicial.X < _buffer.Width &&
-                    accion.PuntoInicial.Y >= 0 && accion.PuntoInicial.Y < _buffer.Height)
+                foreach (var figura in Figuras)
                 {
-                    Color colorObjetivo = _buffer.GetPixel(accion.PuntoInicial.X, accion.PuntoInicial.Y);
-                    RellenoRaster.FloodFill(_buffer, accion.PuntoInicial, accion.ColorRelleno, colorObjetivo);
+                    figura.Dibujar(fb);
+                }
+
+                foreach (var accion in AccionesRelleno)
+                {
+                    if (accion.PuntoInicial.X >= 0 && accion.PuntoInicial.X < fb.Width &&
+                        accion.PuntoInicial.Y >= 0 && accion.PuntoInicial.Y < fb.Height)
+                    {
+                        Color colorObjetivo = fb.GetPixelRapido(accion.PuntoInicial.X, accion.PuntoInicial.Y);
+                        RellenoRaster.FloodFill(fb, accion.PuntoInicial, accion.ColorRelleno, colorObjetivo);
+                    }
                 }
             }
 
