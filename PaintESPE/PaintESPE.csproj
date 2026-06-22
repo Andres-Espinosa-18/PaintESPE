@@ -55,6 +55,7 @@
     <Compile Include="Models\Poligono.cs" />
     <Compile Include="Models\Elipse.cs" />
     <Compile Include="Models\Triangulo.cs" />
+    <Compile Include="Models\FiguraPixel.cs" />
     <Compile Include="Models\PoligonoRegular.cs" />
     <Compile Include="Models\Estrella.cs" />
     <Compile Include="Models\TrazoLibre.cs" />

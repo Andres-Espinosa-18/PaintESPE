@@ -39,7 +39,7 @@ namespace PaintESPE.Views
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, pictureBoxLienzo, new object[] { true });
 
-            _imagenRenderizada = _gestorLienzo.Renderizar();
+            _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
 
             pictureBoxLienzo.MouseDown += PictureBoxLienzo_MouseDown;
             pictureBoxLienzo.MouseMove += PictureBoxLienzo_MouseMove;
@@ -101,25 +101,16 @@ namespace PaintESPE.Views
         {
             if (e.Button == MouseButtons.Left)
             {
-                if (_controladorDibujo.HerramientaActual == HerramientaBasica.Relleno)
-                {
-                    _imagenRenderizada = _controladorDibujo.ProcesarClickRelleno(e.X, e.Y, _controladorDibujo.ColorActivo);
-                    pictureBoxLienzo.Invalidate();
-                }
-                else
-                {
-                    _controladorDibujo.ProcesarMouseDown(e.X, e.Y);
-                    if (_controladorDibujo.HerramientaActual == HerramientaBasica.Seleccion)
-                    {
-                        _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
-                        pictureBoxLienzo.Invalidate();
-                    }
-                }
+                _controladorDibujo.ProcesarMouseDown(e.X, e.Y);
+                _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
+                pictureBoxLienzo.Invalidate();
             }
         }
 
         private void PictureBoxLienzo_MouseMove(object sender, MouseEventArgs e)
         {
+            pictureBoxLienzo.Cursor = _controladorDibujo.ObtenerCursor(e.Location);
+
             if (e.Button == MouseButtons.Left)
             {
                 _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
@@ -131,14 +122,7 @@ namespace PaintESPE.Views
         {
             if (e.Button == MouseButtons.Left)
             {
-                HerramientaBasica prevTool = _controladorDibujo.HerramientaActual;
                 _controladorDibujo.ProcesarMouseUp(e.X, e.Y);
-                
-                if (prevTool != HerramientaBasica.Seleccion && _controladorDibujo.HerramientaActual == HerramientaBasica.Seleccion)
-                {
-                    ResaltarBotonHerramienta(HerramientaBasica.Seleccion);
-                }
-
                 _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
                 pictureBoxLienzo.Invalidate();
             }
@@ -149,9 +133,9 @@ namespace PaintESPE.Views
             if (_imagenRenderizada != null)
                 e.Graphics.DrawImageUnscaled(_imagenRenderizada, 0, 0);
 
-            if (_controladorDibujo.HerramientaActual == HerramientaBasica.Seleccion && _controladorDibujo.FiguraSeleccionada != null)
+            if (_controladorDibujo.FiguraActiva != null)
             {
-                var fig = _controladorDibujo.FiguraSeleccionada;
+                var fig = _controladorDibujo.FiguraActiva;
                 Point[] esquinas = fig.ObtenerPuntosCaja();
                 Rectangle cajaBase = fig.ObtenerAABBBase();
 
@@ -205,8 +189,9 @@ namespace PaintESPE.Views
         {
             if (pictureBoxLienzo.Width > 0 && pictureBoxLienzo.Height > 0)
             {
+                _controladorDibujo.SellarFiguraActiva();
                 _gestorLienzo.ActualizarTamanio(pictureBoxLienzo.Width, pictureBoxLienzo.Height);
-                _imagenRenderizada = _gestorLienzo.Renderizar();
+                _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
                 pictureBoxLienzo.Invalidate();
             }
         }
@@ -289,8 +274,9 @@ namespace PaintESPE.Views
 
         private void btnLimpiar_Click(object sender, EventArgs e)
         {
+            _controladorDibujo.SellarFiguraActiva();
             _gestorLienzo.LimpiarLienzo();
-            _imagenRenderizada = _gestorLienzo.Renderizar();
+            _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
             pictureBoxLienzo.Invalidate();
         }
 

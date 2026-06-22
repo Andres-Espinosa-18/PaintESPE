@@ -6,22 +6,12 @@ using PaintESPE.Raster;
 
 namespace PaintESPE.Controllers
 {
-    public struct AccionRelleno
-    {
-        public Point PuntoInicial;
-        public Color ColorRelleno;
-    }
-
     public class GestorLienzo
     {
-        private Bitmap _buffer;
-        public List<Figura> Figuras { get; private set; }
-        public List<AccionRelleno> AccionesRelleno { get; private set; }
+        public Bitmap LienzoPrincipal { get; private set; }
 
         public GestorLienzo(int anchoInicial, int altoInicial)
         {
-            Figuras = new List<Figura>();
-            AccionesRelleno = new List<AccionRelleno>();
             ActualizarTamanio(anchoInicial, altoInicial);
         }
 
@@ -34,65 +24,92 @@ namespace PaintESPE.Controllers
             using (Graphics g = Graphics.FromImage(nuevoBuffer))
             {
                 g.Clear(Color.White);
+                if (LienzoPrincipal != null)
+                {
+                    g.DrawImageUnscaled(LienzoPrincipal, 0, 0);
+                }
             }
 
-            if (_buffer != null)
+            if (LienzoPrincipal != null)
             {
-                _buffer.Dispose();
+                LienzoPrincipal.Dispose();
             }
 
-            _buffer = nuevoBuffer;
+            LienzoPrincipal = nuevoBuffer;
         }
 
-        public Bitmap Renderizar()
+        public Bitmap ObtenerCopiaLienzo()
         {
-            if (_buffer == null) return null;
+            if (LienzoPrincipal == null) return null;
+            return new Bitmap(LienzoPrincipal);
+        }
 
-            using (Graphics g = Graphics.FromImage(_buffer))
-            {
-                g.Clear(Color.White);
-            }
+        public void SellarFigura(Figura f)
+        {
+            if (f == null || LienzoPrincipal == null) return;
 
-            using (FastBitmap fb = new FastBitmap(_buffer))
+            using (FastBitmap fb = new FastBitmap(LienzoPrincipal))
             {
                 fb.Bloquear();
-
-                foreach (var figura in Figuras)
-                {
-                    figura.Dibujar(fb);
-                }
-
-                foreach (var accion in AccionesRelleno)
-                {
-                    if (accion.PuntoInicial.X >= 0 && accion.PuntoInicial.X < fb.Width &&
-                        accion.PuntoInicial.Y >= 0 && accion.PuntoInicial.Y < fb.Height)
-                    {
-                        Color colorObjetivo = fb.GetPixelRapido(accion.PuntoInicial.X, accion.PuntoInicial.Y);
-                        RellenoRaster.FloodFill(fb, accion.PuntoInicial, accion.ColorRelleno, colorObjetivo);
-                    }
-                }
+                f.Dibujar(fb);
             }
-
-            return _buffer;
-        }
-
-        public void AgregarFigura(Figura f)
-        {
-            if (f != null)
+            
+            if (f is IDisposable disp)
             {
-                Figuras.Add(f);
+                disp.Dispose();
             }
         }
 
-        public void AgregarRelleno(Point punto, Color colorRelleno)
+        public void AplicarRelleno(Point punto, Color colorRelleno)
         {
-            AccionesRelleno.Add(new AccionRelleno { PuntoInicial = punto, ColorRelleno = colorRelleno });
+            if (LienzoPrincipal == null) return;
+            if (punto.X < 0 || punto.X >= LienzoPrincipal.Width || punto.Y < 0 || punto.Y >= LienzoPrincipal.Height) return;
+
+            using (FastBitmap fb = new FastBitmap(LienzoPrincipal))
+            {
+                fb.Bloquear();
+                Color colorObjetivo = fb.GetPixelRapido(punto.X, punto.Y);
+                if (colorObjetivo.ToArgb() != colorRelleno.ToArgb())
+                {
+                    RellenoRaster.FloodFill(fb, punto, colorRelleno, colorObjetivo);
+                }
+            }
         }
 
         public void LimpiarLienzo()
         {
-            Figuras.Clear();
-            AccionesRelleno.Clear();
+            if (LienzoPrincipal == null) return;
+            using (Graphics g = Graphics.FromImage(LienzoPrincipal))
+            {
+                g.Clear(Color.White);
+            }
+        }
+
+        public void GuardarImagen(string ruta)
+        {
+            if (LienzoPrincipal != null)
+            {
+                LienzoPrincipal.Save(ruta);
+            }
+        }
+
+        public void CargarImagen(string ruta)
+        {
+            try
+            {
+                using (Bitmap temp = new Bitmap(ruta))
+                {
+                    ActualizarTamanio(temp.Width, temp.Height);
+                    using (Graphics g = Graphics.FromImage(LienzoPrincipal))
+                    {
+                        g.DrawImageUnscaled(temp, 0, 0);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al cargar imagen: " + ex.Message);
+            }
         }
     }
 }
