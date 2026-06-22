@@ -85,11 +85,18 @@ namespace PaintESPE.Controllers
             }
         }
 
-        public void GuardarImagen(string ruta)
+        public void GuardarImagen(string ruta, System.Drawing.Imaging.ImageFormat formato)
         {
-            if (LienzoPrincipal != null)
+            try
             {
-                LienzoPrincipal.Save(ruta);
+                if (LienzoPrincipal != null)
+                {
+                    LienzoPrincipal.Save(ruta, formato);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show("Error al guardar la imagen: " + ex.Message, "Error", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
         }
 

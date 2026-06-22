@@ -322,6 +322,29 @@ namespace PaintESPE.Views
             }
         }
 
+        private void btnGuardar_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Guardar Dibujo";
+                dialog.Filter = "Imagen PNG (*.png)|*.png|Imagen JPEG (*.jpg)|*.jpg|Mapa de bits (*.bmp)|*.bmp";
+                dialog.DefaultExt = "png";
+                dialog.AddExtension = true;
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    _controladorDibujo.SellarFiguraActiva();
+
+                    System.Drawing.Imaging.ImageFormat formato = System.Drawing.Imaging.ImageFormat.Png;
+                    if (dialog.FilterIndex == 2) formato = System.Drawing.Imaging.ImageFormat.Jpeg;
+                    else if (dialog.FilterIndex == 3) formato = System.Drawing.Imaging.ImageFormat.Bmp;
+
+                    _gestorLienzo.GuardarImagen(dialog.FileName, formato);
+                    MessageBox.Show("¡Imagen guardada exitosamente!", "Guardado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
         private void btnMasColores_Click(object sender, EventArgs e)
         {
             using (ColorDialog dialog = new ColorDialog())

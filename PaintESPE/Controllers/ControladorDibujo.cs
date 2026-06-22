@@ -20,6 +20,7 @@ namespace PaintESPE.Controllers
 
     public class ControladorDibujo
     {
+        private const int TAMANIO_BORRADOR_GRANDE = 30;
         private GestorLienzo _gestor;
 
         private HerramientaBasica _herramientaActual = HerramientaBasica.LapizLibre;
@@ -172,15 +173,16 @@ namespace PaintESPE.Controllers
             {
                 if (_estaDibujando)
                 {
+                    int grosorParaUsar = HerramientaActual == HerramientaBasica.Borrador ? TAMANIO_BORRADOR_GRANDE : GrosorActual;
                     Color colorTrazo = HerramientaActual == HerramientaBasica.Borrador ? Color.White : ColorActivo;
                     
                     using (PaintESPE.Raster.FastBitmap fb = new PaintESPE.Raster.FastBitmap(_gestor.LienzoPrincipal))
                     {
                         fb.Bloquear();
-                        PaintESPE.Raster.DibujoRaster.LineaBresenham(fb, _puntoPrevio, puntoActual, colorTrazo, GrosorActual);
+                        PaintESPE.Raster.DibujoRaster.LineaBresenham(fb, _puntoPrevio, puntoActual, colorTrazo, grosorParaUsar);
                     }
                     
-                    int pad = GrosorActual + 2;
+                    int pad = grosorParaUsar + 2;
                     int minX = Math.Min(_puntoPrevio.X, puntoActual.X) - pad;
                     int minY = Math.Min(_puntoPrevio.Y, puntoActual.Y) - pad;
                     int maxX = Math.Max(_puntoPrevio.X, puntoActual.X) + pad;

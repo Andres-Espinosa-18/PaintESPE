@@ -30,6 +30,7 @@ namespace PaintESPE.Views
             this.btnSeleccion = new System.Windows.Forms.Button();
             this.btnLimpiar = new System.Windows.Forms.Button();
             this.btnCargar = new System.Windows.Forms.Button();
+            this.btnGuardar = new System.Windows.Forms.Button();
             this.btnColor1 = new System.Windows.Forms.Button();
             this.btnColor2 = new System.Windows.Forms.Button();
             this.btnMasColores = new System.Windows.Forms.Button();
@@ -60,6 +61,7 @@ namespace PaintESPE.Views
             this.panelHerramientas.Controls.Add(this.btnSeleccion);
             this.panelHerramientas.Controls.Add(this.btnLimpiar);
             this.panelHerramientas.Controls.Add(this.btnCargar);
+            this.panelHerramientas.Controls.Add(this.btnGuardar);
             this.panelHerramientas.Controls.Add(this.btnColor1);
             this.panelHerramientas.Controls.Add(this.btnColor2);
             this.panelHerramientas.Controls.Add(this.btnMasColores);
@@ -229,6 +231,18 @@ namespace PaintESPE.Views
             this.btnCargar.UseVisualStyleBackColor = true;
             this.btnCargar.Click += new System.EventHandler(this.btnCargar_Click);
             //
+            // btnGuardar
+            //
+            this.btnGuardar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGuardar.FlatAppearance.BorderSize = 1;
+            this.btnGuardar.Location = new System.Drawing.Point(780, 8);
+            this.btnGuardar.Name = "btnGuardar";
+            this.btnGuardar.Size = new System.Drawing.Size(65, 26);
+            this.btnGuardar.TabIndex = 26;
+            this.btnGuardar.Text = "Guardar";
+            this.btnGuardar.UseVisualStyleBackColor = true;
+            this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
+            //
             // btnColor1
             //
             this.btnColor1.BackColor = System.Drawing.Color.Black;
@@ -348,6 +362,7 @@ namespace PaintESPE.Views
         private System.Windows.Forms.Button btnSeleccion;
         private System.Windows.Forms.Button btnLimpiar;
         private System.Windows.Forms.Button btnCargar;
+        private System.Windows.Forms.Button btnGuardar;
         private System.Windows.Forms.Button btnColor1;
         private System.Windows.Forms.Button btnColor2;
         private System.Windows.Forms.Button btnMasColores;
