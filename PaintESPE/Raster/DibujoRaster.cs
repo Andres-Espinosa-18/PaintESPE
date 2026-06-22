@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace PaintESPE.Raster
 {
-    public static class DibujoRaster
+    public unsafe static class DibujoRaster
     {
         public static void LineaBresenham(FastBitmap bmp, Point p1, Point p2, Color color, int grosor = 1)
         {
@@ -199,19 +199,41 @@ namespace PaintESPE.Raster
             if (grosor <= 1)
             {
                 if (x >= 0 && x < bmp.Width && y >= 0 && y < bmp.Height)
-                    bmp.SetPixelRapido(x, y, color);
+                {
+                    byte* pixel = bmp.BasePointer + (y * bmp.Stride) + (x * 4);
+                    pixel[0] = color.B;
+                    pixel[1] = color.G;
+                    pixel[2] = color.R;
+                    pixel[3] = color.A;
+                }
                 return;
             }
 
             int offset = grosor / 2;
-            for (int i = -offset; i <= offset; i++)
-                for (int j = -offset; j <= offset; j++)
+            int minX = Math.Max(0, x - offset);
+            int maxX = Math.Min(bmp.Width - 1, x + offset);
+            int minY = Math.Max(0, y - offset);
+            int maxY = Math.Min(bmp.Height - 1, y + offset);
+
+            int stride = bmp.Stride;
+            byte* basePtr = bmp.BasePointer;
+            byte b = color.B;
+            byte g = color.G;
+            byte r = color.R;
+            byte a = color.A;
+
+            for (int py = minY; py <= maxY; py++)
+            {
+                byte* row = basePtr + (py * stride) + (minX * 4);
+                for (int px = minX; px <= maxX; px++)
                 {
-                    int px = x + i;
-                    int py = y + j;
-                    if (px >= 0 && px < bmp.Width && py >= 0 && py < bmp.Height)
-                        bmp.SetPixelRapido(px, py, color);
+                    row[0] = b;
+                    row[1] = g;
+                    row[2] = r;
+                    row[3] = a;
+                    row += 4;
                 }
+            }
         }
     }
 }

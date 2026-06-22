@@ -8,7 +8,7 @@ namespace PaintESPE.Controllers
 {
     public enum HerramientaBasica
     {
-        Ninguna, LapizLibre, LineaRecta, Rectangulo, Elipse,
+        Ninguna, LapizLibre, Borrador, LineaRecta, Rectangulo, Elipse,
         Triangulo, PoligonoRegular, Estrella, Curva, Relleno, Seleccion
     }
 
@@ -140,9 +140,8 @@ namespace PaintESPE.Controllers
             switch (HerramientaActual)
             {
                 case HerramientaBasica.LapizLibre:
-                    _trazoLibreTemporal = new TrazoLibre(new System.Collections.Generic.List<Point> { _puntoInicio })
-                    { ColorLinea = ColorActivo, Grosor = GrosorActual };
-                    FiguraActiva = _trazoLibreTemporal;
+                case HerramientaBasica.Borrador:
+                    _puntoPrevio = _puntoInicio;
                     break;
                 case HerramientaBasica.Curva:
                     if (_estadoCurva == 0)
@@ -164,8 +163,35 @@ namespace PaintESPE.Controllers
             }
         }
 
-        public Bitmap ProcesarMouseMove(int x, int y)
+        public Bitmap ProcesarMouseMove(int x, int y, out Rectangle regionActualizacion)
         {
+            regionActualizacion = Rectangle.Empty;
+            Point puntoActual = new Point(x, y);
+
+            if (HerramientaActual == HerramientaBasica.LapizLibre || HerramientaActual == HerramientaBasica.Borrador)
+            {
+                if (_estaDibujando)
+                {
+                    Color colorTrazo = HerramientaActual == HerramientaBasica.Borrador ? Color.White : ColorActivo;
+                    
+                    using (PaintESPE.Raster.FastBitmap fb = new PaintESPE.Raster.FastBitmap(_gestor.LienzoPrincipal))
+                    {
+                        fb.Bloquear();
+                        PaintESPE.Raster.DibujoRaster.LineaBresenham(fb, _puntoPrevio, puntoActual, colorTrazo, GrosorActual);
+                    }
+                    
+                    int pad = GrosorActual + 2;
+                    int minX = Math.Min(_puntoPrevio.X, puntoActual.X) - pad;
+                    int minY = Math.Min(_puntoPrevio.Y, puntoActual.Y) - pad;
+                    int maxX = Math.Max(_puntoPrevio.X, puntoActual.X) + pad;
+                    int maxY = Math.Max(_puntoPrevio.Y, puntoActual.Y) + pad;
+                    
+                    regionActualizacion = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+                    _puntoPrevio = puntoActual;
+                }
+                return null;
+            }
+
             Bitmap buffer = _gestor.ObtenerCopiaLienzo();
             if (buffer == null) return null;
 
@@ -181,8 +207,6 @@ namespace PaintESPE.Controllers
                 }
                 return buffer;
             }
-
-            Point puntoActual = new Point(x, y);
 
             if (FiguraActiva != null && _manejadorActivo != ManejadorActivo.Ninguno)
             {
@@ -270,14 +294,6 @@ namespace PaintESPE.Controllers
                     case HerramientaBasica.Estrella:
                         FiguraActiva = new Estrella(_puntoInicio, puntoActual, NumeroLados) { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
                         break;
-                    case HerramientaBasica.LapizLibre:
-                        if (_trazoLibreTemporal != null)
-                        {
-                            Point ultimoPunto = _trazoLibreTemporal.Puntos[_trazoLibreTemporal.Puntos.Count - 1];
-                            if (ultimoPunto != puntoActual)
-                                _trazoLibreTemporal.Puntos.Add(puntoActual);
-                        }
-                        break;
                 }
             }
 
@@ -339,16 +355,9 @@ namespace PaintESPE.Controllers
                 return;
             }
 
-            if (HerramientaActual == HerramientaBasica.LapizLibre)
+            if (HerramientaActual == HerramientaBasica.LapizLibre || HerramientaActual == HerramientaBasica.Borrador)
             {
-                if (_trazoLibreTemporal != null && _trazoLibreTemporal.Puntos.Count > 1)
-                {
-                    AutoSeleccionar(FiguraActiva);
-                }
-                else
-                {
-                    FiguraActiva = null;
-                }
+                // Ya fue dibujado permanentemente en LienzoPrincipal
             }
             else if (HerramientaActual == HerramientaBasica.Curva)
             {
@@ -474,6 +483,8 @@ namespace PaintESPE.Controllers
                     case ManejadorActivo.Rotacion: return Cursors.Hand;
                 }
             }
+            else if (HerramientaActual == HerramientaBasica.Relleno) return Cursors.Cross;
+            else if (HerramientaActual == HerramientaBasica.Borrador) return Cursors.Default; // o un cursor personalizado
             
             return Cursors.Cross;
         }

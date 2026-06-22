@@ -93,23 +93,31 @@ namespace PaintESPE.Controllers
             }
         }
 
-        public void CargarImagen(string ruta)
+        public void CargarImagenDesdeArchivo(string ruta)
         {
-            try
+            if (System.IO.File.Exists(ruta))
             {
-                using (Bitmap temp = new Bitmap(ruta))
+                Bitmap nuevoLienzo;
+                using (var fs = new System.IO.FileStream(ruta, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                 {
-                    ActualizarTamanio(temp.Width, temp.Height);
-                    using (Graphics g = Graphics.FromImage(LienzoPrincipal))
+                    using (var img = Image.FromStream(fs))
                     {
-                        g.DrawImageUnscaled(temp, 0, 0);
+                        nuevoLienzo = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                        using (Graphics g = Graphics.FromImage(nuevoLienzo))
+                        {
+                            g.DrawImage(img, 0, 0, img.Width, img.Height);
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error al cargar imagen: " + ex.Message);
+
+                if (LienzoPrincipal != null)
+                {
+                    LienzoPrincipal.Dispose();
+                }
+
+                LienzoPrincipal = nuevoLienzo;
             }
         }
+
     }
 }

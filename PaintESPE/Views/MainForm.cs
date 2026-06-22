@@ -102,8 +102,8 @@ namespace PaintESPE.Views
             if (e.Button == MouseButtons.Left)
             {
                 _controladorDibujo.ProcesarMouseDown(e.X, e.Y);
-                _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
-                pictureBoxLienzo.Invalidate();
+                Bitmap nuevoBuffer = _controladorDibujo.ProcesarMouseMove(e.X, e.Y, out Rectangle dirtyRect);
+                ActualizarRenderizado(nuevoBuffer, dirtyRect);
             }
         }
 
@@ -113,8 +113,8 @@ namespace PaintESPE.Views
 
             if (e.Button == MouseButtons.Left)
             {
-                _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
-                pictureBoxLienzo.Invalidate();
+                Bitmap nuevoBuffer = _controladorDibujo.ProcesarMouseMove(e.X, e.Y, out Rectangle dirtyRect);
+                ActualizarRenderizado(nuevoBuffer, dirtyRect);
             }
         }
 
@@ -123,9 +123,32 @@ namespace PaintESPE.Views
             if (e.Button == MouseButtons.Left)
             {
                 _controladorDibujo.ProcesarMouseUp(e.X, e.Y);
-                _imagenRenderizada = _controladorDibujo.ProcesarMouseMove(e.X, e.Y);
-                pictureBoxLienzo.Invalidate();
+                Bitmap nuevoBuffer = _controladorDibujo.ProcesarMouseMove(e.X, e.Y, out Rectangle dirtyRect);
+                ActualizarRenderizado(nuevoBuffer, dirtyRect);
             }
+        }
+
+        private void ActualizarRenderizado(Bitmap nuevoBuffer, Rectangle dirtyRect)
+        {
+            if (nuevoBuffer != null)
+            {
+                if (_imagenRenderizada != null && _imagenRenderizada != _gestorLienzo.LienzoPrincipal)
+                    _imagenRenderizada.Dispose();
+                _imagenRenderizada = nuevoBuffer;
+            }
+            else
+            {
+                if (_imagenRenderizada != _gestorLienzo.LienzoPrincipal)
+                {
+                    if (_imagenRenderizada != null) _imagenRenderizada.Dispose();
+                    _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
+                }
+            }
+
+            if (dirtyRect != Rectangle.Empty)
+                pictureBoxLienzo.Invalidate(dirtyRect);
+            else
+                pictureBoxLienzo.Invalidate();
         }
 
         private void PictureBoxLienzo_Paint(object sender, PaintEventArgs e)
@@ -221,6 +244,7 @@ namespace PaintESPE.Views
             switch (herramienta)
             {
                 case HerramientaBasica.LapizLibre: btnLapiz.BackColor = highlight; break;
+            case HerramientaBasica.Borrador: btnBorrador.BackColor = highlight; break;
                 case HerramientaBasica.LineaRecta: btnLinea.BackColor = highlight; break;
                 case HerramientaBasica.Rectangulo: btnRectangulo.BackColor = highlight; break;
                 case HerramientaBasica.Elipse: btnElipse.BackColor = highlight; break;
@@ -234,6 +258,7 @@ namespace PaintESPE.Views
         }
 
         private void btnLapiz_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.LapizLibre);
+        private void btnBorrador_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Borrador);
         private void btnLinea_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.LineaRecta);
         private void btnRectangulo_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Rectangulo);
         private void btnElipse_Click(object sender, EventArgs e) => SeleccionarHerramienta(HerramientaBasica.Elipse);
@@ -278,6 +303,23 @@ namespace PaintESPE.Views
             _gestorLienzo.LimpiarLienzo();
             _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
             pictureBoxLienzo.Invalidate();
+        }
+
+        private void btnCargar_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Abrir Imagen de Proyecto";
+                dialog.Filter = "Archivos de Imagen|*.png;*.jpg;*.jpeg;*.bmp|Todos los archivos|*.*";
+                
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    _controladorDibujo.SellarFiguraActiva();
+                    _gestorLienzo.CargarImagenDesdeArchivo(dialog.FileName);
+                    _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
+                    pictureBoxLienzo.Invalidate();
+                }
+            }
         }
 
         private void btnMasColores_Click(object sender, EventArgs e)

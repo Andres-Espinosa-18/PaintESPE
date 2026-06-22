@@ -18,6 +18,7 @@ namespace PaintESPE.Views
             this.pictureBoxLienzo = new System.Windows.Forms.PictureBox();
             this.panelHerramientas = new System.Windows.Forms.Panel();
             this.btnLapiz = new System.Windows.Forms.Button();
+            this.btnBorrador = new System.Windows.Forms.Button();
             this.btnLinea = new System.Windows.Forms.Button();
             this.btnRectangulo = new System.Windows.Forms.Button();
             this.btnElipse = new System.Windows.Forms.Button();
@@ -28,6 +29,7 @@ namespace PaintESPE.Views
             this.btnRelleno = new System.Windows.Forms.Button();
             this.btnSeleccion = new System.Windows.Forms.Button();
             this.btnLimpiar = new System.Windows.Forms.Button();
+            this.btnCargar = new System.Windows.Forms.Button();
             this.btnColor1 = new System.Windows.Forms.Button();
             this.btnColor2 = new System.Windows.Forms.Button();
             this.btnMasColores = new System.Windows.Forms.Button();
@@ -46,6 +48,7 @@ namespace PaintESPE.Views
             this.panelHerramientas.BackColor = System.Drawing.Color.FromArgb(240, 240, 240);
             this.panelHerramientas.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelHerramientas.Controls.Add(this.btnLapiz);
+            this.panelHerramientas.Controls.Add(this.btnBorrador);
             this.panelHerramientas.Controls.Add(this.btnLinea);
             this.panelHerramientas.Controls.Add(this.btnRectangulo);
             this.panelHerramientas.Controls.Add(this.btnElipse);
@@ -56,6 +59,7 @@ namespace PaintESPE.Views
             this.panelHerramientas.Controls.Add(this.btnRelleno);
             this.panelHerramientas.Controls.Add(this.btnSeleccion);
             this.panelHerramientas.Controls.Add(this.btnLimpiar);
+            this.panelHerramientas.Controls.Add(this.btnCargar);
             this.panelHerramientas.Controls.Add(this.btnColor1);
             this.panelHerramientas.Controls.Add(this.btnColor2);
             this.panelHerramientas.Controls.Add(this.btnMasColores);
@@ -80,6 +84,18 @@ namespace PaintESPE.Views
             this.btnLapiz.Text = "Lápiz";
             this.btnLapiz.UseVisualStyleBackColor = true;
             this.btnLapiz.Click += new System.EventHandler(this.btnLapiz_Click);
+            //
+            // btnBorrador
+            //
+            this.btnBorrador.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBorrador.FlatAppearance.BorderSize = 1;
+            this.btnBorrador.Location = new System.Drawing.Point(68, 8);
+            this.btnBorrador.Name = "btnBorrador";
+            this.btnBorrador.Size = new System.Drawing.Size(60, 26);
+            this.btnBorrador.TabIndex = 25;
+            this.btnBorrador.Text = "Borrador";
+            this.btnBorrador.UseVisualStyleBackColor = true;
+            this.btnBorrador.Click += new System.EventHandler(this.btnBorrador_Click);
             //
             // btnLinea
             //
@@ -201,6 +217,18 @@ namespace PaintESPE.Views
             this.btnLimpiar.UseVisualStyleBackColor = true;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
+            // btnCargar
+            //
+            this.btnCargar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCargar.FlatAppearance.BorderSize = 1;
+            this.btnCargar.Location = new System.Drawing.Point(710, 8);
+            this.btnCargar.Name = "btnCargar";
+            this.btnCargar.Size = new System.Drawing.Size(65, 26);
+            this.btnCargar.TabIndex = 24;
+            this.btnCargar.Text = "Cargar";
+            this.btnCargar.UseVisualStyleBackColor = true;
+            this.btnCargar.Click += new System.EventHandler(this.btnCargar_Click);
+            //
             // btnColor1
             //
             this.btnColor1.BackColor = System.Drawing.Color.Black;
@@ -308,6 +336,7 @@ namespace PaintESPE.Views
 
         private System.Windows.Forms.Panel panelHerramientas;
         private System.Windows.Forms.Button btnLapiz;
+        private System.Windows.Forms.Button btnBorrador;
         private System.Windows.Forms.Button btnLinea;
         private System.Windows.Forms.Button btnRectangulo;
         private System.Windows.Forms.Button btnElipse;
@@ -318,6 +347,7 @@ namespace PaintESPE.Views
         private System.Windows.Forms.Button btnRelleno;
         private System.Windows.Forms.Button btnSeleccion;
         private System.Windows.Forms.Button btnLimpiar;
+        private System.Windows.Forms.Button btnCargar;
         private System.Windows.Forms.Button btnColor1;
         private System.Windows.Forms.Button btnColor2;
         private System.Windows.Forms.Button btnMasColores;

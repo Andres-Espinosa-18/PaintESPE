@@ -6,6 +6,8 @@ namespace PaintESPE.Raster
 {
     public unsafe class FastBitmap : IDisposable
     {
+        public byte* BasePointer => _basePointer;
+        public int Stride => _stride;
         private Bitmap _bitmap;
         private BitmapData _bitmapData;
         private byte* _basePointer;
