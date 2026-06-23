@@ -20,7 +20,7 @@ namespace PaintESPE.Controllers
 
     public class ControladorDibujo
     {
-        private const int TAMANIO_BORRADOR_GRANDE = 30;
+        public const int TAMANIO_BORRADOR_GRANDE = 30;
         private GestorLienzo _gestor;
 
         private HerramientaBasica _herramientaActual = HerramientaBasica.LapizLibre;
@@ -57,6 +57,18 @@ namespace PaintESPE.Controllers
         private Rectangle _cajaOriginal;
         private Point _centroOriginal;
         private double _anguloPrevio;
+
+        private Bitmap _bufferTrabajo;
+
+        public void ActualizarTamanioBuffer(int width, int height)
+        {
+            if (width <= 0 || height <= 0) return;
+            if (_bufferTrabajo != null)
+            {
+                _bufferTrabajo.Dispose();
+            }
+            _bufferTrabajo = new Bitmap(width, height);
+        }
 
         public ControladorDibujo(GestorLienzo gestor)
         {
@@ -194,19 +206,16 @@ namespace PaintESPE.Controllers
                 return null;
             }
 
-            Bitmap buffer = _gestor.ObtenerCopiaLienzo();
-            if (buffer == null) return null;
+            if (_bufferTrabajo == null || _gestor.LienzoPrincipal == null) return null;
+
+            using (Graphics g = Graphics.FromImage(_bufferTrabajo))
+            {
+                g.DrawImage(_gestor.LienzoPrincipal, 0, 0);
+            }
+            Bitmap buffer = _bufferTrabajo;
 
             if (!_estaDibujando)
             {
-                if (FiguraActiva != null)
-                {
-                    using (PaintESPE.Raster.FastBitmap fb = new PaintESPE.Raster.FastBitmap(buffer))
-                    {
-                        fb.Bloquear();
-                        FiguraActiva.Dibujar(fb);
-                    }
-                }
                 return buffer;
             }
 
@@ -296,15 +305,6 @@ namespace PaintESPE.Controllers
                     case HerramientaBasica.Estrella:
                         FiguraActiva = new Estrella(_puntoInicio, puntoActual, NumeroLados) { ColorLinea = ColorActivo, ColorRelleno = Color.Transparent, Grosor = GrosorActual };
                         break;
-                }
-            }
-
-            if (FiguraActiva != null)
-            {
-                using (PaintESPE.Raster.FastBitmap fb = new PaintESPE.Raster.FastBitmap(buffer))
-                {
-                    fb.Bloquear();
-                    FiguraActiva.Dibujar(fb);
                 }
             }
 

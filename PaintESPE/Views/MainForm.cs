@@ -12,6 +12,8 @@ namespace PaintESPE.Views
         private ControladorDibujo _controladorDibujo;
         private Bitmap _imagenRenderizada;
         private bool _colorActivoEsPrimario = true;
+        private Cursor _cursorActual = Cursors.Default;
+        private Point _posicionRaton;
 
         private static readonly Color[] ColoresPaleta = {
             Color.Black, Color.FromArgb(64, 64, 64), Color.Gray, Color.Silver,
@@ -39,7 +41,8 @@ namespace PaintESPE.Views
                 BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                 null, pictureBoxLienzo, new object[] { true });
 
-            _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
+            _controladorDibujo.ActualizarTamanioBuffer(pictureBoxLienzo.Width, pictureBoxLienzo.Height);
+            _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
 
             pictureBoxLienzo.MouseDown += PictureBoxLienzo_MouseDown;
             pictureBoxLienzo.MouseMove += PictureBoxLienzo_MouseMove;
@@ -109,12 +112,24 @@ namespace PaintESPE.Views
 
         private void PictureBoxLienzo_MouseMove(object sender, MouseEventArgs e)
         {
-            pictureBoxLienzo.Cursor = _controladorDibujo.ObtenerCursor(e.Location);
+            _posicionRaton = e.Location;
+
+            Cursor nuevoCursor = _controladorDibujo.ObtenerCursor(e.Location);
+            if (_cursorActual != nuevoCursor)
+            {
+                _cursorActual = nuevoCursor;
+                pictureBoxLienzo.Cursor = _cursorActual;
+            }
 
             if (e.Button == MouseButtons.Left)
             {
                 Bitmap nuevoBuffer = _controladorDibujo.ProcesarMouseMove(e.X, e.Y, out Rectangle dirtyRect);
                 ActualizarRenderizado(nuevoBuffer, dirtyRect);
+            }
+            else if (_controladorDibujo.HerramientaActual == HerramientaBasica.Borrador)
+            {
+                int padding = ControladorDibujo.TAMANIO_BORRADOR_GRANDE + 2;
+                pictureBoxLienzo.Invalidate(new Rectangle(_posicionRaton.X - padding, _posicionRaton.Y - padding, padding * 2, padding * 2));
             }
         }
 
@@ -132,17 +147,11 @@ namespace PaintESPE.Views
         {
             if (nuevoBuffer != null)
             {
-                if (_imagenRenderizada != null && _imagenRenderizada != _gestorLienzo.LienzoPrincipal)
-                    _imagenRenderizada.Dispose();
                 _imagenRenderizada = nuevoBuffer;
             }
             else
             {
-                if (_imagenRenderizada != _gestorLienzo.LienzoPrincipal)
-                {
-                    if (_imagenRenderizada != null) _imagenRenderizada.Dispose();
-                    _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
-                }
+                _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
             }
 
             if (dirtyRect != Rectangle.Empty)
@@ -159,6 +168,50 @@ namespace PaintESPE.Views
             if (_controladorDibujo.FiguraActiva != null)
             {
                 var fig = _controladorDibujo.FiguraActiva;
+
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                if (fig is PaintESPE.Models.FiguraPixel figPixel && figPixel.BufferPixeles != null)
+                {
+                    PointF[] destPoints = new PointF[] {
+                        new PointF(fig.Puntos[0].X, fig.Puntos[0].Y),
+                        new PointF(fig.Puntos[1].X, fig.Puntos[1].Y),
+                        new PointF(fig.Puntos[3].X, fig.Puntos[3].Y)
+                    };
+                    e.Graphics.DrawImage(figPixel.BufferPixeles, destPoints);
+                }
+                else
+                {
+                    using (Pen penFantasma = new Pen(fig.ColorLinea, fig.Grosor))
+                    {
+                        if (fig is PaintESPE.Models.Elipse)
+                        {
+                            Rectangle aabb = fig.ObtenerAABBBase();
+                            int rx = aabb.Width / 2;
+                            int ry = aabb.Height / 2;
+                            Point centro = fig.CentroGeometrico;
+                            if (centro == Point.Empty) centro = new Point(aabb.Left + rx, aabb.Top + ry);
+
+                            e.Graphics.TranslateTransform(centro.X, centro.Y);
+                            e.Graphics.RotateTransform(fig.AnguloRotacion);
+                            e.Graphics.DrawEllipse(penFantasma, -rx, -ry, rx * 2, ry * 2);
+                            e.Graphics.ResetTransform();
+                        }
+                        else if (fig is PaintESPE.Models.CurvaBezier && fig.Puntos.Count == 4)
+                        {
+                            e.Graphics.DrawBezier(penFantasma, fig.Puntos[0], fig.Puntos[1], fig.Puntos[2], fig.Puntos[3]);
+                        }
+                        else if (fig is PaintESPE.Models.Linea && fig.Puntos.Count == 2)
+                        {
+                            e.Graphics.DrawLine(penFantasma, fig.Puntos[0], fig.Puntos[1]);
+                        }
+                        else if (fig.Puntos.Count > 1)
+                        {
+                            e.Graphics.DrawPolygon(penFantasma, fig.Puntos.ToArray());
+                        }
+                    }
+                }
+
                 Point[] esquinas = fig.ObtenerPuntosCaja();
                 Rectangle cajaBase = fig.ObtenerAABBBase();
 
@@ -206,6 +259,12 @@ namespace PaintESPE.Views
                     e.Graphics.DrawEllipse(Pens.Black, rectRot);
                 }
             }
+
+            if (_controladorDibujo.HerramientaActual == HerramientaBasica.Borrador)
+            {
+                int tam = ControladorDibujo.TAMANIO_BORRADOR_GRANDE;
+                e.Graphics.DrawRectangle(Pens.Black, _posicionRaton.X - tam / 2, _posicionRaton.Y - tam / 2, tam, tam);
+            }
         }
 
         private void PictureBoxLienzo_Resize(object sender, EventArgs e)
@@ -214,7 +273,8 @@ namespace PaintESPE.Views
             {
                 _controladorDibujo.SellarFiguraActiva();
                 _gestorLienzo.ActualizarTamanio(pictureBoxLienzo.Width, pictureBoxLienzo.Height);
-                _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
+                _controladorDibujo.ActualizarTamanioBuffer(pictureBoxLienzo.Width, pictureBoxLienzo.Height);
+                _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
                 pictureBoxLienzo.Invalidate();
             }
         }
@@ -301,7 +361,7 @@ namespace PaintESPE.Views
         {
             _controladorDibujo.SellarFiguraActiva();
             _gestorLienzo.LimpiarLienzo();
-            _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
+            _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
             pictureBoxLienzo.Invalidate();
         }
 
@@ -316,7 +376,8 @@ namespace PaintESPE.Views
                 {
                     _controladorDibujo.SellarFiguraActiva();
                     _gestorLienzo.CargarImagenDesdeArchivo(dialog.FileName);
-                    _imagenRenderizada = _gestorLienzo.ObtenerCopiaLienzo();
+                    _controladorDibujo.ActualizarTamanioBuffer(_gestorLienzo.LienzoPrincipal.Width, _gestorLienzo.LienzoPrincipal.Height);
+                    _imagenRenderizada = _gestorLienzo.LienzoPrincipal;
                     pictureBoxLienzo.Invalidate();
                 }
             }

@@ -38,11 +38,7 @@ namespace PaintESPE.Controllers
             LienzoPrincipal = nuevoBuffer;
         }
 
-        public Bitmap ObtenerCopiaLienzo()
-        {
-            if (LienzoPrincipal == null) return null;
-            return new Bitmap(LienzoPrincipal);
-        }
+
 
         public void SellarFigura(Figura f)
         {
@@ -104,15 +100,19 @@ namespace PaintESPE.Controllers
         {
             if (System.IO.File.Exists(ruta))
             {
-                Bitmap nuevoLienzo;
+                int anchoOriginal = LienzoPrincipal != null ? Math.Max(LienzoPrincipal.Width, 1) : 800;
+                int altoOriginal = LienzoPrincipal != null ? Math.Max(LienzoPrincipal.Height, 1) : 600;
+
+                Bitmap nuevoLienzo = new Bitmap(anchoOriginal, altoOriginal, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
                 using (var fs = new System.IO.FileStream(ruta, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                 {
                     using (var img = Image.FromStream(fs))
                     {
-                        nuevoLienzo = new Bitmap(img.Width, img.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                         using (Graphics g = Graphics.FromImage(nuevoLienzo))
                         {
-                            g.DrawImage(img, 0, 0, img.Width, img.Height);
+                            g.Clear(Color.White);
+                            g.DrawImage(img, 0, 0);
                         }
                     }
                 }
