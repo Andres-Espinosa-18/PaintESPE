@@ -126,11 +126,6 @@ namespace PaintESPE.Views
                 Bitmap nuevoBuffer = _controladorDibujo.ProcesarMouseMove(e.X, e.Y, out Rectangle dirtyRect);
                 ActualizarRenderizado(nuevoBuffer, dirtyRect);
             }
-            else if (_controladorDibujo.HerramientaActual == HerramientaBasica.Borrador)
-            {
-                int padding = ControladorDibujo.TAMANIO_BORRADOR_GRANDE + 2;
-                pictureBoxLienzo.Invalidate(new Rectangle(_posicionRaton.X - padding, _posicionRaton.Y - padding, padding * 2, padding * 2));
-            }
         }
 
         private void PictureBoxLienzo_MouseUp(object sender, MouseEventArgs e)
@@ -260,11 +255,6 @@ namespace PaintESPE.Views
                 }
             }
 
-            if (_controladorDibujo.HerramientaActual == HerramientaBasica.Borrador)
-            {
-                int tam = ControladorDibujo.TAMANIO_BORRADOR_GRANDE;
-                e.Graphics.DrawRectangle(Pens.Black, _posicionRaton.X - tam / 2, _posicionRaton.Y - tam / 2, tam, tam);
-            }
         }
 
         private void PictureBoxLienzo_Resize(object sender, EventArgs e)
@@ -291,6 +281,7 @@ namespace PaintESPE.Views
             Color normal = SystemColors.Control;
 
             btnLapiz.BackColor = normal;
+            btnBorrador.BackColor = normal;
             btnLinea.BackColor = normal;
             btnRectangulo.BackColor = normal;
             btnElipse.BackColor = normal;
